@@ -47,7 +47,7 @@ devs=($(ls ${pcap_dir} | grep .pcap | sed 's/\(.*\)_\(.*\)_.*_.*.pcap/\2/' | sor
 #############################################
 echo "decoding pcap files"
 for dev in ${devs[@]}; do
-    if [ -z $dev_id ] || [[ "${dev_id}" != "${dev}" ]]; then
+    if [ ! -z $dev_id ] && [[ "${dev_id}" != "${dev}" ]]; then
         echo "${scriptname}: device id ${dev_id} specified to analyse but not matched to ${dev}, continuing"
         continue
     fi
