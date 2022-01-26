@@ -119,8 +119,8 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 #  -c <ip address>
 #  -u                   : specify to test using udp
 ######################################################################
-/usr/bin/echo "${scriptname}: starting serverside iperf test"
-/usr/bin/echo "${scriptname}: iperf3 -s -1 -J  -p ${iperf3_port} > ${data_dir_server}/${session_id}/server_iperf3_${testdate}.json"
+echo "${scriptname}: starting serverside iperf test"
+echo "${scriptname}: iperf3 -s -1 -J  -p ${iperf3_port} > ${data_dir_server}/${session_id}/server_iperf3_${testdate}.json"
 result=1
 
 while [ ${result} -eq 1 ]; do
@@ -130,30 +130,30 @@ while [ ${result} -eq 1 ]; do
     kill -0 $iperf_PID
     result=$?
     if [ ${result} -eq 1 ]; then
-        /usr/bin/echo "${scriptname}:  Error starting server side iperf3 session. Retrying in 1 second"
+        echo "${scriptname}:  Error starting server side iperf3 session. Retrying in 1 second"
     else
-        /usr/bin/echo "${scriptname}:  Started server side iperf3."
+        echo "${scriptname}:  Started server side iperf3."
         break
     fi
 done
 
-/usr/bin/echo "${scriptname}: running client side iperf test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${iperf3_port}"
-/usr/bin/echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"/usr/bin/iperf3 -p ${iperf3_port} -c ${serverIP} -l ${DATALENGTH} -N -t ${time} -T ${session_id} -O 1 -J ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf3_${testdate}.json\""
+echo "${scriptname}: running client side iperf test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${iperf3_port}"
+echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"/usr/bin/iperf3 -p ${iperf3_port} -c ${serverIP} -l ${DATALENGTH} -N -t ${time} -T ${session_id} -O 1 -J ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf3_${testdate}.json\""
 ssh ${userid_device}@${deviceIP} "/usr/bin/iperf3 -c ${serverIP} -p ${iperf3_port} -l ${DATALENGTH} -N -t ${time} -T ${session_id} -O 1 -J ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf3_${testdate}.json"
 if [ ${?} -eq 1 ]; then
-    /usr/bin/echo "${scriptname}:  Error while connecting from client site to iperf3 server"
+    echo "${scriptname}:  Error while connecting from client site to iperf3 server"
 else
-    /usr/bin/echo "${scriptname}:  Finished iperf3 test"
+    echo "${scriptname}:  Finished iperf3 test"
 fi
 sleep 3
 echo "${scriptname}:  Checking if server session closed as should"
 kill -0 $iperf_PID
 result=$?
 if [ ${result} -eq 1 ]; then
-    /usr/bin/echo "${scriptname}:  Iperf session has closed down"
+    echo "${scriptname}:  Iperf session has closed down"
 else
-    /usr/bin/echo "${scriptname}:  iperf3 session on server still running!!!"
-    /usr/bin/echo "${scriptname}:  closing server iperf3 session for session_id $session_id"
+    echo "${scriptname}:  iperf3 session on server still running!!!"
+    echo "${scriptname}:  closing server iperf3 session for session_id $session_id"
     kill $iperf_PID
 fi
 ##########################################
