@@ -69,7 +69,7 @@ for dev in ${devs[@]}; do
         node --max-old-space-size=14000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -i ${filename} -s true -b device${dev}
     done
 done
-exit 0
+
 #############################################
 # matching csv files and comparing them
 #############################################
