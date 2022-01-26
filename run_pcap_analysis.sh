@@ -81,27 +81,27 @@ for dev in ${devs[@]}; do
     fi
     echo "${scriptname}: processing dev: ${dev}"
     for filename in ${pcap_dir}/*${basename_a}${dev}.csv; do
-    echo "${scriptname}: for file: $filename:"
-    if [ -e "$filename" ]; then
-      echo "does not exist"
-      continue
-    fi
-    date_str="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\1/'`" # 2021.2.3
-    echo data_str: $date_str
-    time_lower="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\2/'`" # 10.20.0
-    echo time_lower: $time_lower
-    time_upper="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\3/'`" # 10.25.0
-    echo time_upper: $time_upper
-    filename_a="${pcap_dir}/${date_str}_${time_lower}-${time_upper}_${basename_a}${dev}.csv"
-    filename_b="${pcap_dir}/${date_str}_${time_lower}-${time_upper}_${basename_b}${dev}.csv"
-    filename_result="${pcap_dir}/compare_${date_str}_${time_lower}-${time_upper}_${basename_a}${dev}-${basename_b}.csv"
-    
-    # checking if filenames exist, if not continue to next file
-    [ -e "$filename_a" ] || continue 
-    [ -e "$filename_b" ] || continue
-    echo "found matching filename: $filename_b"
-    echo  "comparing files and storing result in: ${filename_result}"
-    node --max-old-space-size=12000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -r ${filename_result} --compare=${filename_a},${filename_b}
-    echo
+        echo "${scriptname}: for file: $filename:"
+        if [ ! -e "$filename" ]; then
+            echo "does not exist"
+            continue
+        fi
+        date_str="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\1/'`" # 2021.2.3
+        echo data_str: $date_str
+        time_lower="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\2/'`" # 10.20.0
+        echo time_lower: $time_lower
+        time_upper="`/usr/bin/basename $filename | sed 's/\(.*\..*\..*\)_\(.*\..*\..*\)-\(.*..*..*\)_\(.*\)\.\(.*\)/\3/'`" # 10.25.0
+        echo time_upper: $time_upper
+        filename_a="${pcap_dir}/${date_str}_${time_lower}-${time_upper}_${basename_a}${dev}.csv"
+        filename_b="${pcap_dir}/${date_str}_${time_lower}-${time_upper}_${basename_b}${dev}.csv"
+        filename_result="${pcap_dir}/compare_${date_str}_${time_lower}-${time_upper}_${basename_a}${dev}-${basename_b}.csv"
+        
+        # checking if filenames exist, if not continue to next file
+        [ -e "$filename_a" ] || continue 
+        [ -e "$filename_b" ] || continue
+        echo "found matching filename: $filename_b"
+        echo  "comparing files and storing result in: ${filename_result}"
+        node --max-old-space-size=12000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -r ${filename_result} --compare=${filename_a},${filename_b}
+        echo
     done
 done
