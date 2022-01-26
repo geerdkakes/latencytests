@@ -75,7 +75,7 @@ exit 0
 #############################################
 echo "matching decoded files"
 for dev in ${devs[@]}; do 
-    if [ -z $dev_id ] || [[ "${dev_id}" != "${dev}" ]]; then
+    if [ ! -z $dev_id ] && [[ "${dev_id}" != "${dev}" ]]; then
         echo "${scriptname}: device id ${dev_id} specified to analyse but not matched to ${dev}, continuing"
         continue
     fi
