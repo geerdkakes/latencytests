@@ -273,13 +273,14 @@ check_bash_version 4 2
 
 if [ "${action^^}" =  "ALL" ] || [ "${action^^}" =  "TEST" ] ; then
     read_csv run_test_tasks
+    sleep 20
 fi
 if [ "${action^^}" =  "ALL" ] || [ "${action^^}" =  "ANALYSE" ] ; then
     read_csv analyse_tests
 fi
 if [ "${action^^}" =  "ALL" ] || [ "${action^^}" =  "GRAPH" ] ; then
-    sleep 10
+    sleep 5
     read_csv collect_lines
-    sleep 20
+    sleep 10
     graph_tests
 fi
