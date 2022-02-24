@@ -113,13 +113,15 @@ default_filter = [
     [
         // identifies  iperf3 packets from server to device
         {type: "match", field: "protocol", value: "udp", operator: "eq"},
-        {type: "match", field: "udpHeader.src_port", value: 5201, operator: "eq"},
+        {type: "match", field: "udpHeader.src_port", value: 5200, operator: "ge"},
+        {type: "match", field: "udpHeader.src_port", value: 5251, operator: "le"},
         {type: "direction", value: "down" }
     ],
     [
         // identifies iperf3 packets from device to server
         {type: "match", field: "protocol", value: "udp", operator: "eq"},
-        {type: "match", field: "udpHeader.dest_port", value: 5201, operator: "eq"},
+        {type: "match", field: "udpHeader.dest_port", value: 5200, operator: "ge"},
+        {type: "match", field: "udpHeader.dest_port", value: 5251, operator: "le"},
         {type: "direction", value: "up" }
     ]
 ];
