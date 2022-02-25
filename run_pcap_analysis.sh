@@ -54,7 +54,7 @@ for dev in ${devs[@]}; do
     echo "${scriptname}: processing dev: ${dev}"
     echo "${scriptname}: ...............processing server side pcaps"
     echo ""
-    for filename in ${pcap_dir}/server_${dev}*.pcap; do
+    for filename in ${pcap_dir}/${basename_b}_${dev}*.pcap; do
         [ -e "$filename" ] || continue
         echo ${scriptname}: decoding $filename
         echo node --max-old-space-size=14000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -i ${filename} -s true -b server${dev}
@@ -62,7 +62,7 @@ for dev in ${devs[@]}; do
     done
     echo "${scriptname}: ...............processing device side pcaps"
     echo ""
-    for filename in ${pcap_dir}/device_${dev}*.pcap; do
+    for filename in ${pcap_dir}/${basename_a}_${dev}*.pcap; do
         [ -e "$filename" ] || continue
         echo ${scriptname}: decoding $filename
         echo node --max-old-space-size=14000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -i ${filename} -s true -b device${dev}
