@@ -12,8 +12,8 @@ import os
 
 # run using: ./analyse_iperfdata.py ../datadir/Low_Latency_Test_Eindhoven_20211129_042742_Eindhoven_BIC_Usage_of_Radio_Resource_Monitoring_20211129_144832.csv ../datadir/20211129_02*/*.json
 
-rb_blocks_file=sys.argv[1]
-data_files=sys.argv[2:]
+data_files_1=sys.argv[1]
+data_files_2=sys.argv[2]
 
     # example samples:
     # downlink:
@@ -327,8 +327,8 @@ def read_pcap_analysis_csv(filename):
     df = pd.read_csv(filename)
 
     df['timestamp_microseconds'] = df['source_pcapPacketHeader.ts_sec'] * 1000000 + df['source_pcapPacketHeader.ts_usec']
-    df['timestamp'] = df['timestamp_microseconds'].apply(np.int64)
-    df['DateTime'] = pd.to_datetime(df['timestamp'], unit='us')
+    df['timestamp'] = df['timestamp_microseconds'].apply(np.int64) /1000 + 3600000
+    df['DateTime'] = pd.to_datetime(df['timestamp'], unit='ms')
     df = df.set_index('DateTime')
     # below is a hack to prevent re run of big dataset. We should always use the actual direction per rule
     up_count = df[df['direction'] == 'up'].shape[0]
@@ -342,14 +342,16 @@ def read_pcap_analysis_csv(filename):
     def aggregate(df_to_aggregate):
         bandwidth_kbps = df_to_aggregate['pcapPacketHeader.orig_len'].sum() * 8 / 1024
         bandwidth_Mbps = bandwidth_kbps / 1024
+        bandwidth_received_Mbps = df_to_aggregate[df_to_aggregate['lost'] == False]['pcapPacketHeader.orig_len'].sum() * 8 / (1024 * 1024)
         packets_lost = df_to_aggregate[df_to_aggregate['lost'] == True].shape[0]
         total_packets = df_to_aggregate.shape[0]
-        percentage_lost = packets_lost / total_packets
+        percentage_lost = packets_lost / total_packets * 100
         # add an hour to align with resource block data
-        timestamp = int(df_to_aggregate['timestamp_microseconds'].iloc[0]/1000 + 3600000)
+        timestamp = int(df_to_aggregate['timestamp_microseconds'].iloc[0]/1000)
         aggregated_array = {
             'bandwidth_kbps': [bandwidth_kbps],
             'bandwidth_Mbps': [bandwidth_Mbps],
+            'bandwidth_received_Mbps': [bandwidth_received_Mbps],
             'packets_lost': [packets_lost],
             'packets_send': [total_packets],
             'percentage_lost': [percentage_lost],
@@ -359,13 +361,13 @@ def read_pcap_analysis_csv(filename):
 
         return pd.DataFrame.from_dict(aggregated_array)
 
-    df = df.resample('1S').apply(aggregate)
+    df_aggregated = df.resample('1S').apply(aggregate)
 
     # do not set index to timestamp else we can not reference it anymore as df['timestamp']
     # df = df.set_index('timestamp')
     # df = df.drop(columns=[ 'DateTime' ])
 
-    return df
+    return df, df_aggregated
 
 #############################################################################################
 # main program
@@ -373,131 +375,54 @@ def read_pcap_analysis_csv(filename):
 #
 #############################################################################################
 
-# load resource block file from U2020 tool
-df_resourceblocks = load_resource_blocks(rb_blocks_file)
-
-averages = {
-    "average_up_Mbit_per_second": [],
-    "average_down_Mbit_per_second": [],
-    "average Uplink Used RB Num": [],
-    "average Downlink Used RB Num": [],
-    "percentage_lost": [],
-    "direction": [],
-    "sessionid": [],
-    "start_timestamp": []
-}
-
 # load data files
-index_iperf = 0
-index_pcap = 0
-for index, file in enumerate(data_files):
+df_pcap_total_1_unag, df_pcap_total_1 = read_pcap_analysis_csv(data_files_1)
+df_pcap_total_2_unag, df_pcap_total_2 = read_pcap_analysis_csv(data_files_2)
 
-    # this operation is very compute intensive, better to first concatenate and then build dataframe:
-    print("loading file: " + file)
-    filename, file_extension = os.path.splitext(file)
-    print("filename: " + filename + " and extension: " + file_extension)
-    if file_extension == '.json':
-        df_iperf = load_iperf_json(file)
-        df_iperf = merge_dataframes(df_resourceblocks, df_iperf)
-        averages["average_up_Mbit_per_second"].append(df_iperf['up_Mbit_per_second'].mean())
-        averages["average_down_Mbit_per_second"].append(df_iperf['down_Mbit_per_second'].mean())
-        averages['average Uplink Used RB Num'].append(df_iperf['Uplink Used RB Num'].mean())
-        averages['average Downlink Used RB Num'].append(df_iperf['Downlink Used RB Num'].mean())
-        averages['percentage_lost'].append(df_iperf.iloc[0]['end.sum.lost_percent'])
-        averages['direction'].append(df_iperf.iloc[0]['direction'])
-        averages['sessionid'].append(df_iperf.iloc[0]['title'])
-        averages['start_timestamp'].append(df_iperf.iloc[0]['timestamp'])
+print (df_pcap_total_1)
+print (df_pcap_total_2)
 
-        if index_iperf == 0:
-            df_total = df_iperf
-        else:
-            df_total = df_total.append(df_iperf,ignore_index=False)
 
-        index_iperf = index_iperf + 1
-    if file_extension == '.csv':
-        df_pcap = read_pcap_analysis_csv(file)
-        df_pcap = merge_dataframes(df_resourceblocks, df_pcap)
-        if index_pcap == 0:
-            df_pcap_total = df_pcap
-        else:
-            df_pcap_total = df_pcap_total.append(df_pcap,ignore_index=False)
 
-        index_pcap = index_pcap + 1
-        print(df_pcap_total)
 
-print (df_pcap_total)
-
-# create averages dataframe from earlier collected information
-df_averages = pd.DataFrame(averages)
-print(df_averages)
 
 # sort iperf data based on timestamp
-df_total = df_total.sort_values(by=['timestamp'])
-df_pcap_total = df_pcap_total.sort_values(by=['timestamp'])
+df_pcap_total_1 = df_pcap_total_1.sort_values(by=['timestamp'])
+df_pcap_total_1_unag = df_pcap_total_1_unag.sort_values(by=['timestamp'])
+df_pcap_total_2 = df_pcap_total_2.sort_values(by=['timestamp'])
+df_pcap_total_2_unag = df_pcap_total_2_unag.sort_values(by=['timestamp'])
 
-# sort averages dataframe based on test sequence
-df_averages = df_averages.sort_values(by=['start_timestamp'])
+first_timestamp = df_pcap_total_1.iloc[0]['timestamp']
+first_timestamp_unag = df_pcap_total_1_unag.iloc[0]['timestamp']
+df_pcap_total_1['minutes'] = (df_pcap_total_1['timestamp'] - first_timestamp ) / (1000*60)
+df_pcap_total_1_unag['minutes'] = (df_pcap_total_1_unag['timestamp'] - first_timestamp_unag ) / (1000*60)
+first_timestamp = df_pcap_total_2.iloc[0]['timestamp']
+first_timestamp_unag = df_pcap_total_2_unag.iloc[0]['timestamp']
+df_pcap_total_2['minutes'] = (df_pcap_total_2['timestamp'] - first_timestamp ) / (1000*60)
+df_pcap_total_2_unag['minutes'] = (df_pcap_total_2_unag['timestamp'] - first_timestamp_unag ) / (1000*60)
 
-# store combined iperf data in single csv file
-df_iperf.to_csv('iperftotal.csv')
-
-# store processed file in new csv file (including timestamp)
-df_resourceblocks.to_csv('totalresourceblocks.csv')
-
-# store combined dataset in csv file
-df_total.to_csv("totaldata.csv")
-df_pcap_total.to_csv("totaldatapcap.csv")
-df_averages.to_csv("dfaverages.csv")
-# df_total = pd.read_csv("totaldata.csv")
-# df_pcap_total = pd.read_csv("totaldatapcap.csv")
-# df_averages = pd.read_csv("dfaverages.csv")
-# Add minute column, starting by zero for a nice view in a figure
-first_timestamp = df_total.iloc[0]['timestamp']
-df_total['minutes'] = (df_total['timestamp'] - first_timestamp ) / (1000*60)
-
-first_timestamp = df_pcap_total.iloc[0]['timestamp']
-df_pcap_total['minutes'] = (df_pcap_total['timestamp'] - first_timestamp ) / (1000*60)
 # create figures of data
-fig = make_subplots(rows=6, cols=3,
-                    shared_xaxes=False,
-                    vertical_spacing=0.1, 
-                    subplot_titles=("Uplink Used RB Num", "Uplink Used RB Num", "Downlink Used RB Num", "Downlink Used RB Num", "packet loss up", "packet loss down", "uplink Mbps (send data)", "", "", "downlink mbps (received data)", "", "", "lost data"))
-
-fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['Uplink Used RB Num'], name="# of RB's per second up"),
+fig = make_subplots(rows=8, cols=1,
+                    shared_xaxes=True,
+                    vertical_spacing=0.05, 
+                    subplot_titles=("downlink mbps (server->dev)", "downlink mbps (server->gnb)", "lost (server->dev)", "lost (server->gnb)", "percentage lost (server->dev)", "percentage lost (server->gnb)", "delay ms (server->dev)", "delay ms (server->gnb)"))
+fig.add_trace(go.Scatter(x=df_pcap_total_1['minutes'], y=df_pcap_total_1['bandwidth_received_Mbps'], name="Down bandwidth mbps (pcap)"),
               row=1, col=1)
-
-fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['Downlink Used RB Num'], name="# of RB's per second down"),
-              row=2, col=1)
-
-fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['up_Mbit_per_second'], name="Mbps up"),
+fig.add_trace(go.Scatter(x=df_pcap_total_1_unag['minutes'], y=df_pcap_total_1_unag['lost'], name="lost"),
               row=3, col=1)
-
-fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['down_Mbit_per_second'], name="Mbps down"),
+fig.add_trace(go.Scatter(x=df_pcap_total_1['minutes'], y=df_pcap_total_1['percentage_lost'], name="percentage lost (pcap)"),
+              row=5, col=1)
+fig.add_trace(go.Scatter(x=df_pcap_total_2['minutes'], y=df_pcap_total_2['bandwidth_received_Mbps'], name="Down bandwidth mbps (pcap)"),
+              row=2, col=1)
+fig.add_trace(go.Scatter(x=df_pcap_total_2_unag['minutes'], y=df_pcap_total_2_unag['lost'], name="lost"),
               row=4, col=1)
-if 'end.sum.lost_percent' in df_total:
-    fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['end.sum.lost_percent'], name="average percentage lost"),
-              row=5, col=1)
-if 'sum.lost_percent' in df_total:
-    fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['sum.lost_percent'], name="percentage lost"),
-              row=5, col=1)
-fig.add_trace(go.Scatter(x=df_pcap_total['minutes'], y=df_pcap_total['percentage_lost'], name="percentage lost (pcap)"),
+fig.add_trace(go.Scatter(x=df_pcap_total_2['minutes'], y=df_pcap_total_2['percentage_lost'], name="percentage lost (pcap)"),
               row=6, col=1)
-fig.add_trace(go.Scatter(x=df_averages.loc[df_averages['direction'] == 'up']['average_up_Mbit_per_second'], 
-                         y=df_averages.loc[df_averages['direction'] == 'up']['average Uplink Used RB Num'], 
-                         name="average RB's per Mbps up"),
-               row=1, col=2)
-fig.add_trace(go.Scatter(x=df_averages.loc[df_averages['direction'] == 'down']['average_down_Mbit_per_second'], 
-                         y=df_averages.loc[df_averages['direction'] == 'down']['average Downlink Used RB Num'], 
-                         name="average RB's per Mbps down"),
-               row=1, col=3)
-fig.add_trace(go.Scatter(x=df_averages.loc[df_averages['direction'] == 'up']['average_up_Mbit_per_second'], 
-                         y=df_averages.loc[df_averages['direction'] == 'up']['percentage_lost'], 
-                         name="average percentage lost per mbps up"),
-               row=2, col=2)
-fig.add_trace(go.Scatter(x=df_averages.loc[df_averages['direction'] == 'down']['average_down_Mbit_per_second'], 
-                         y=df_averages.loc[df_averages['direction'] == 'down']['percentage_lost'], 
-                         name="average percentage lost per mbps down"),
-               row=2, col=3)
+fig.add_trace(go.Scatter(x=df_pcap_total_1_unag['minutes'], y=df_pcap_total_1_unag['delay_usec']/1000, name="delay ms"),
+              row=7, col=1)
+fig.add_trace(go.Scatter(x=df_pcap_total_2_unag['minutes'], y=df_pcap_total_2_unag['delay_usec']/1000, name="delay ms"),
+              row=8, col=1)
+# delay_usec
 
 # fig.add_trace(go.Scatter(x=df_total['down_Mbit_per_second'], y=df_total['Downlink Used RB Num'], name="# RB's per Mbps down"),
 #               row=2, col=3)
@@ -509,9 +434,10 @@ fig.update_xaxes(title_text="Mbps", row=1, col=2)
 fig.update_xaxes(title_text="Mbps", row=1, col=3)
 fig.update_xaxes(title_text="Mbps", row=2, col=2)
 fig.update_xaxes(title_text="Mbps", row=2, col=3)
-fig.update_yaxes(title_text="# blocks per second", row=1, col=1)
-fig.update_yaxes(title_text="# blocks per second", row=2, col=1)
+fig.update_yaxes(title_text="packets lost", row=1, col=2)
+fig.update_yaxes(title_text="", row=1, col=1)
 fig.update_yaxes(title_text="Mbps", row=3, col=1)
 fig.update_yaxes(title_text="Mbps", row=4, col=1)
 fig.update_yaxes(title_text="perc. lost", row=5, col=1)
+fig.update_yaxes(title_text="perc. lost", row=6, col=1)
 fig.show()
