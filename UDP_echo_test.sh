@@ -41,6 +41,12 @@ do
         -d_user) userid_device="$2"
             echo "${scriptname}: userid used at device: ${userid_device}"
             shift ;;
+        -test_id) test_id="$2"
+            echo "${scriptname}: test_id used at device: ${test_id}"
+            shift ;;
+        -udp_server_port) udp_server_port="$2"
+            echo "${scriptname}: udp_server_port used at device: ${udp_server_port}"
+            shift ;;
         --) shift
             break ;;
         *) echo "$1 is not an option";;
@@ -58,24 +64,24 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 # start server side proces
 ##########################################
 echo "${scriptname}: run udp echo test on server"
-/usr/bin/node ${udp_echo_app_server} -t ${duration} > ${data_dir_server}/${session_id}/server_UDP_echo_${testdate}.log  &
+/usr/bin/node ${udp_echo_app_server} -t ${duration} -p ${udp_server_port}> ${data_dir_server}/${session_id}/server_${test_id}_UDP_echo_${testdate}.log  &
 
 ##########################################
 # start device site proces
 ##########################################
 echo "${scriptname}: run udp echo test on device with interval of ${interval} and pakage size of ${bytes}Bytes."
 ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_device} -h ${serverIP} \
-                                                                       -c 5g_device \
-                                                                       -p 21000 \
+                                                                       -c 5g_${test_id} \
+                                                                       -p ${udp_server_port} \
                                                                        -s ${bytes} \
                                                                        -i ${interval} \
                                                                        -t ${duration} \
-                                                                            > ${data_dir_device}/${session_id}/device_UDP_echo_${testdate}.log"
+                                                                            > ${data_dir_device}/${session_id}/device_${test_id}_UDP_echo_${testdate}.log"
 
 sleep 1
 
 ##########################################
 # retrieve device logfile 
 ##########################################
-scp ${userid_device}@${deviceIP}:${data_dir_device}/${session_id}/device_UDP_echo_${testdate}.log  ${data_dir_server}/${session_id}/
+scp ${userid_device}@${deviceIP}:${data_dir_device}/${session_id}/device_${test_id}_UDP_echo_${testdate}.log  ${data_dir_server}/${session_id}/
 

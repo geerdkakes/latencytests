@@ -70,11 +70,12 @@ function run_test_tasks(){
     # check precense of variables for testing
     ############################
     echo "${scriptname}: checking if called with correct variables"
-    check_variable udp_test
-    check_variable udp_data_size
-    check_variable udp_interpacket_time
-    check_variable udp_test_user
-    check_variable udp_test_device_ip
+    check_variable udp_test_1
+    check_variable udp_data_size_1
+    check_variable udp_interpacket_time_1
+    check_variable udp_test_user_1
+    check_variable udp_test_device_ip_1
+    check_variable udp_server_port_1
     check_variable mqtt_test
     check_variable mqtt_data_size
     check_variable mqtt_interpacket_time
@@ -109,17 +110,21 @@ function run_test_tasks(){
     # start recording pcaps
     if [ "${pcap_device1^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting pcap logging device 1"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server1_ip} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server1_ip} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
     fi
     if [ "${pcap_device2^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting pcap logging device 2"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server2_ip} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server2_ip} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
     fi
 
     # start udp tests
-    if [ "${udp_test^^}" =  "TRUE" ] ; then
-        echo "${scriptname}: starting udp tests"
-        ./UDP_echo_test.sh -b ${udp_data_size} -t ${test_duration} -s_ip ${udp_server_ip} -d_ip ${udp_test_device_ip} -i ${udp_interpacket_time} -d_user ${udp_test_user} -s ${session_id} &
+    if [ "${udp_test_1^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting udp tests 1"
+        ./UDP_echo_test.sh -b ${udp_data_size_1} -t ${test_duration} -s_ip ${udp_server_ip_1} -d_ip ${udp_test_device_ip_1} -i ${udp_interpacket_time_1} -d_user ${udp_test_user_1} -s ${session_id} -test_id dev1 -udp_server_port  ${udp_server_port_1} &
+    fi
+    if [ "${udp_test_2^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting udp tests 2"
+        ./UDP_echo_test.sh -b ${udp_data_size_2} -t ${test_duration} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_server_port  ${udp_server_port_2} &
     fi
 
     # start mqtt tests
@@ -211,17 +216,19 @@ function collect_lines() {
         echo "${scriptname}: removing previous collection: ${data_dir_server}/${session_id}/compare_total.csv"
         rm ${data_dir_server}/${session_id}/compare_total.csv
     fi
-    csv_compare_files=(${data_dir_server}/${session_id}/compare_*.csv)
-    echo "${scriptname}: collecting comparison result of session: ${session_id} to ${data_dir_server}/${session_id}/compare_total.csv"
-    head -1 ${csv_compare_files[0]} > ${data_dir_server}/${session_id}/compare_total.csv
-    for file in ${csv_compare_files[@]}; do
-        echo "${scriptname}: adding ${file}"
-        tail -n +2 ${file} >> ${data_dir_server}/${session_id}/compare_total.csv
+    devs=($(ls ${data_dir_server}/${session_id} | grep .pcap | sed 's/\(.*\)_\(.*\)_.*_.*.pcap/\2/' | sort | uniq))
+    for dev in ${devs[@]}; do
+        csv_compare_files=(${data_dir_server}/${session_id}/compare_${dev}_*.csv)
+        echo "${scriptname}: collecting comparison result of session: ${session_id} to ${data_dir_server}/${session_id}/compare_total_${dev}.csv"
+        head -1 ${csv_compare_files[0]} > ${data_dir_server}/${session_id}/compare_total_${dev}.csv
+        for file in ${csv_compare_files[@]}; do
+            echo "${scriptname}: adding ${file}"
+            tail -n +2 ${file} >> ${data_dir_server}/${session_id}/compare_total_${dev}.csv
+        done
+        lines_to_graph="${lines_to_graph} ${data_dir_server}/${session_id}/compare_total_${dev}.csv:${session_id}_${dev}"
     done
-    lines_to_graph="${lines_to_graph} ${data_dir_server}/${session_id}/compare_total.csv:${session_id}"
-
     # check which tests have run during all sessions
-    if [ "${udp_test^^}" =  "TRUE" ] ; then
+    if [ "${udp_test_1^^}" =  "TRUE" ] ; then
         ((udp_tests++))
     fi
     if [ "${mqtt_test^^}" =  "TRUE" ] ; then
@@ -237,7 +244,7 @@ function graph_tests() {
     protocols_to_graph=""
     total_sessions=$((index-1))
     echo "${scriptname}: graphing ${total_sessions} sessions"
-    if [ "${udp_tests}" -eq "${total_sessions}" ]; then
+    if [ "${udp_tests_1}" -eq "${total_sessions}" ]; then
         if [ "${protocols_to_graph}" = "" ]; then
             protocols_to_graph="udp"
         else

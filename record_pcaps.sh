@@ -52,6 +52,18 @@ do
         -test_id) test_id="$2"
             echo "${scriptname}: test_id: ${test_id}"
             shift ;;
+        -extra_probe_enabled) extra_probe_enabled="$2"
+            echo "${scriptname}: extra probe enabled found: ${extra_probe_enabled}"
+            shift ;;
+        -extra_probe_name) extra_probe_name="$2"
+            echo "${scriptname}: extra probe name found: ${extra_probe_name}"
+            shift ;;
+        -extra_probe_dev) extra_probe_dev="$2"
+            echo "${scriptname}: extra probe device found: ${extra_probe_dev}"
+            shift ;;
+        -extra_probe_snaplen) extra_probe_snaplen="$2"
+            echo "${scriptname}: extra probe snaplen found: ${extra_probe_snaplen}"
+            shift ;;
         --) shift
             break ;;
         *) echo "$1 is not an option";;
@@ -103,6 +115,10 @@ fi
 echo "${scriptname}: logging on sever interface ${serverinterface}"
 /usr/bin/sudo /usr/sbin/tcpdump -n -i ${serverIF} ${protocols}  ${ports} -s ${snaplen} -B 4096 -G ${duration} -W 1 -w ${data_dir_server}/${session_id}/server_${test_id}_%Y-%m-%d_%H.%M.%S.pcap &
 echo /usr/bin/sudo /usr/sbin/tcpdump -n -i ${serverIF} ${protocols}  ${ports} -s ${snaplen} -B 4096 -G ${duration} -W 1 -w ${data_dir_server}/${session_id}/server_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
+if [ "${extra_probe_enabled^^}" = "TRUE" ]; then
+    /usr/bin/sudo /usr/sbin/tcpdump -n -i ${extra_probe_dev} udp  port 2152 -s ${extra_probe_snaplen} -B 4096 -G ${duration} -W 1 -w ${data_dir_server}/${session_id}/${extra_probe_name}_${test_id}_%Y-%m-%d_%H.%M.%S.pcap &
+    echo /usr/bin/sudo /usr/sbin/tcpdump -n -i ${extra_probe_dev} udp  port 2152 -s ${extra_probe_snaplen} -B 4096 -G ${duration} -W 1 -w ${data_dir_server}/${session_id}/${extra_probe_name}_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
+fi
 echo "${scriptname}: logging device pcap on interface ${deviceinterface}"
 echo ssh ${userid_device}@${deviceIP} /usr/bin/sudo /usr/sbin/tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/device_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
 ssh ${userid_device}@${deviceIP} /usr/bin/sudo /usr/sbin/tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/device_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
