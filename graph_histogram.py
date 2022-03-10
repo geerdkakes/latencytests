@@ -51,8 +51,10 @@ variables = []
 
 for protocol in protocols:
     if protocol == "udp":
-        variables.append([None,21000,"udp_up","up","udp"])
-        variables.append([21000,None,"udp_down","down","udp"])
+        variables.append([None,51000,"udp_up","up","udp"])
+        variables.append([51000,None,"udp_down","down","udp"])
+        variables.append([None,51001,"udp_up","up","udp"])
+        variables.append([51001,None,"udp_down","down","udp"])
     if protocol == "tcp":
         variables.append([None,1883,"mqtt_up","up","tcp"])
         variables.append([1883,None,"mqtt_down","down","tcp"])
@@ -101,6 +103,7 @@ def read_latency(sourceport, destport, basename, direction, filename, protocol):
         firsttimestamp = 0
         last_dest_usec = 0
         last_src_usec = 0
+        print("reading file: " + filename)
         print("running with protol: " + protocol + " sourceport " + str(sourceport) + " destport: " + str(destport) + " direction: " + direction)
         for index, row in enumerate(readCSV):
             if (index == 1):
@@ -201,22 +204,24 @@ for pars_index, pars in enumerate(variables):
     destination_interp_data_for_frame = {}
     pcktsize_data_for_frames = {}
     for lat_data in lat_analysis_files:
+        print("analysing: " +lat_data['basename'] )
         lat_data_for_frame[lat_data['basename']+'_latency'] = lat_data['latencies'][:minlen]
         lost_packets_for_frame[lat_data['basename']+'_latency'] = lat_data['losts'][:minlen]
         timeline_for_frame[lat_data['basename']+'_latency'] = lat_data['timeline'][:minlen]
         source_interp_data_for_frame[lat_data['basename']+'_src_interpcktime'] = lat_data['source_interpackettimes'][:min_interp_len]
         destination_interp_data_for_frame[lat_data['basename']+'_dst_interpcktime'] = lat_data['destination_interpackettimes'][:min_interp_len]
         pcktsize_data_for_frames[lat_data['basename']+'_packetsize'] = lat_data['packetsize'][:minlen]
-        lat_data_max_lat = np.round(np.max(lat_data['latencies']),1,out=None)
+        np_latency_arr = np.array(lat_data['latencies'], dtype=np.float64)
+        lat_data_max_lat = np.round(np.nanmax(np_latency_arr),1,out=None)
         max_latency=max(lat_data_max_lat,max_latency)
         lostpackets=np.count_nonzero(lat_data['losts']==0)
         packetloss=lostpackets/len(lat_data['losts'])
         print(lat_data['basename']+'_latency', minlen, max_latency)
-        infofile_handler.write(lat_data['basename']+'_min_latency: ' + str(np.round(np.min(lat_data['latencies']),1,out=None))+'\n')
-        infofile_handler.write(lat_data['basename']+'_mean_latency: ' + str(np.round(np.mean(lat_data['latencies']),1,out=None))+'\n')
-        infofile_handler.write(lat_data['basename']+'_std_latency: ' + str(np.round(np.std(lat_data['latencies']),1,out=None))+'\n')
-        infofile_handler.write(lat_data['basename']+'_95th_percentile_latency: ' + str(calc_perc_lat(lat_data['latencies'], 0.95))+'\n')
-        infofile_handler.write(lat_data['basename']+'_99th_percentile_latency: ' + str(calc_perc_lat(lat_data['latencies'], 0.99))+'\n')
+        infofile_handler.write(lat_data['basename']+'_min_latency: ' + str(np.round(np.min(np_latency_arr),1,out=None))+'\n')
+        infofile_handler.write(lat_data['basename']+'_mean_latency: ' + str(np.round(np.mean(np_latency_arr),1,out=None))+'\n')
+        infofile_handler.write(lat_data['basename']+'_std_latency: ' + str(np.round(np.std(np_latency_arr),1,out=None))+'\n')
+        infofile_handler.write(lat_data['basename']+'_95th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.95))+'\n')
+        infofile_handler.write(lat_data['basename']+'_99th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.99))+'\n')
         infofile_handler.write(lat_data['basename']+'_max_latency: '+ str(lat_data_max_lat)+'\n')
         infofile_handler.write(lat_data['basename']+'_mean_source_interpackettime: ' + str(np.round(np.mean(lat_data['source_interpackettimes']),1,out=None))+'\n')
         infofile_handler.write(lat_data['basename']+'_std_source_interpackettime: ' + str(np.round(np.std(lat_data['source_interpackettimes']),1,out=None))+'\n')
