@@ -244,7 +244,7 @@ function graph_tests() {
     protocols_to_graph=""
     total_sessions=$((index-1))
     echo "${scriptname}: graphing ${total_sessions} sessions"
-    if [ "${udp_tests_1}" -eq "${total_sessions}" ]; then
+    if [ "${udp_tests}" -eq "${total_sessions}" ]; then
         if [ "${protocols_to_graph}" = "" ]; then
             protocols_to_graph="udp"
         else
@@ -269,6 +269,9 @@ function graph_tests() {
     echo "${scriptname}: starting graph with argument: ${lines_to_graph}"
     export data_dir_server="${data_dir_server}"
     echo " calling graph_histogram.py with env data_dir_server: ${data_dir_server} and argument: ${lines_to_graph}"
+    echo
+    echo ./graph_histogram.py ${lines_to_graph}
+    echo
     ./graph_histogram.py ${lines_to_graph}
 }
 
