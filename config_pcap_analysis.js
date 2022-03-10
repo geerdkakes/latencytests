@@ -87,7 +87,8 @@ default_filter = [
     [
         // identifies udp echo packets from device to serverv
         {type: "match", field: "protocol", value: "udp", operator: "eq"},
-        {type: "match", field: "udpHeader.dest_port", value: 21000, operator: "eq"},
+        {type: "match", field: "udpHeader.dest_port", value: 21000, operator: "ge"},
+        {type: "match", field: "udpHeader.dest_port", value: 21010, operator: "le"},
         {type: "direction", value: "up" }
     ],
     [
@@ -100,7 +101,8 @@ default_filter = [
     [
         // identifies udp echo packets from server to device
         {type: "match", field: "protocol", value: "udp", operator: "eq"},
-        {type: "match", field: "udpHeader.src_port", value: 21000, operator: "eq"},
+        {type: "match", field: "udpHeader.src_port", value: 21000, operator: "ge"},
+        {type: "match", field: "udpHeader.src_port", value: 21010, operator: "le"},
         {type: "direction", value: "down" }
     ],
     [
