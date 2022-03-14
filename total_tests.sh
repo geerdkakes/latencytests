@@ -135,8 +135,8 @@ function run_test_tasks(){
 
     # start iperf3 tests
     if [ "${iperf3_test^^}" =  "TRUE" ] ; then
-        echo "${scriptname}: starting iperf3 tests"
-        ./run_iperf3.sh -s ${session_id} -M ${iperf3_mtu_size} -bitrate ${iperf3_bitrate} -s_ip ${iperf3_server_ip} -d_ip ${iperf3_test_device_ip} -t ${test_duration} -d ${iperf3_direction} -d_user ${iperf3_test_user} -protocol ${iperf3_protocol} -streams ${iperf3_streams} -port ${iperf3_port} &
+        echo "${scriptname}: starting iperf2 tests"
+        ./run_iperf2.sh -s ${session_id} -M ${iperf3_mtu_size} -bitrate ${iperf3_bitrate} -s_ip ${iperf3_server_ip} -d_ip ${iperf3_test_device_ip} -t ${test_duration} -d ${iperf3_direction} -d_user ${iperf3_test_user} -protocol ${iperf3_protocol} -streams ${iperf3_streams} -port ${iperf3_port} &
     fi
 
     sleep $((test_duration+10))
