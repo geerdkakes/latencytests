@@ -151,7 +151,8 @@ if [ ${?} -eq 1 ]; then
 else
     echo "${scriptname}:  Finished iperf2 test"
 fi
-sleep ${extra_time_server}
+echo "${scriptname}:  waiting for serverside iperf to close down"
+sleep $((extra_time_server + 3))
 echo "${scriptname}:  Checking if server session closed as should"
 kill -0 $iperf_PID
 result=$?
