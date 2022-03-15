@@ -51,10 +51,12 @@ variables = []
 
 for protocol in protocols:
     if protocol == "udp":
-        variables.append([None,51000,"udp_up","up","udp"])
-        variables.append([51000,None,"udp_down","down","udp"])
-        variables.append([None,51001,"udp_up","up","udp"])
-        variables.append([51001,None,"udp_down","down","udp"])
+        # variables.append([None,51000,"udp_up","up","udp"])
+        # variables.append([51000,None,"udp_down","down","udp"])
+        # variables.append([None,51001,"udp_up","up","udp"])
+        # variables.append([51001,None,"udp_down","down","udp"])
+        variables.append([None,None,"udp_up","up","udp"])
+        variables.append([None,None,"udp_down","down","udp"])
     if protocol == "tcp":
         variables.append([None,1883,"mqtt_up","up","tcp"])
         variables.append([1883,None,"mqtt_down","down","tcp"])
