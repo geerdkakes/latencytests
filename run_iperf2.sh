@@ -31,6 +31,7 @@ streams="1"
 udp=""
 scriptname=$0
 iperf2_port=5210
+extra_time_server=5
 #############################################
 # interpret command line flags
 #############################################
@@ -119,32 +120,38 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 #  -u                   : specify to test using udp
 ######################################################################
 echo "${scriptname}: starting serverside iperf test"
-echo "${scriptname}: iperf -s -1 -y C -p ${iperf2_port} -t ${time} > ${data_dir_server}/${session_id}/server_iperf2_${testdate}.csv"
+echo "${scriptname}: ${iperf2_app} -s -i 1 -y C -p ${iperf2_port} -t $((time + extra_time_server)) ${udp_tcp_specific} > ${data_dir_server}/${session_id}/server_iperf2_${testdate}.csv"
 result=1
-
+errcounter=0
 while [ ${result} -eq 1 ]; do
-    ${iperf2_app} -s -1 -y C -p ${iperf2_port} -t ${time} > ${data_dir_server}/${session_id}/server_iperf2_${testdate}.csv &
+    ${iperf2_app} -s -i 1 -y C -p ${iperf2_port} -t $((time + extra_time_server)) ${udp_tcp_specific} > ${data_dir_server}/${session_id}/server_iperf2_${testdate}.csv &
     iperf_PID=$!
     sleep 1
     kill -0 $iperf_PID
     result=$?
     if [ ${result} -eq 1 ]; then
-        echo "${scriptname}:  Error starting server side iperf2 session. Retrying in 1 second"
+        if [ ${errcounter} -eq 5 ]; then
+            echo "${scriptname}: giving up starting iperf2 session on server"
+            exit 1
+        else
+            echo "${scriptname}:  Error starting server side iperf2 session. Retrying in 1 second"
+        fi
     else
         echo "${scriptname}:  Started server side iperf2."
         break
     fi
+    ((errcounter++))
 done
 
 echo "${scriptname}: running client side iperf test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${iperf2_port}"
-echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"${iperf2_app} -p ${iperf2_port} -c ${serverIP} -l ${DATALENGTH} -t ${time} -T ${session_id} -y C ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf2_${testdate}.csv\""
-ssh ${userid_device}@${deviceIP} "${iperf2_app} -c ${serverIP} -p ${iperf2_port} -l ${DATALENGTH}  -t ${time} -y C ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf2_${testdate}.csv"
+echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"${iperf2_app} -c ${serverIP} -p ${iperf2_port} -i 1 -l ${DATALENGTH} -t ${time} -T ${session_id} -y C ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf2_${testdate}.csv\""
+ssh ${userid_device}@${deviceIP} "${iperf2_app} -c ${serverIP} -p ${iperf2_port} -i 1 -l ${DATALENGTH}  -t ${time} -y C ${dir_var} -P ${streams} ${bitrateoption} ${udp_tcp_specific} > ${data_dir_device}/${session_id}/device_iperf2_${testdate}.csv"
 if [ ${?} -eq 1 ]; then
     echo "${scriptname}:  Error while connecting from client site to iperf2 server"
 else
     echo "${scriptname}:  Finished iperf2 test"
 fi
-sleep 3
+sleep ${extra_time_server}
 echo "${scriptname}:  Checking if server session closed as should"
 kill -0 $iperf_PID
 result=$?
