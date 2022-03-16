@@ -44,11 +44,11 @@ do
         -test_id) test_id="$2"
             echo "${scriptname}: test_id used at device: ${test_id}"
             shift ;;
-        -udp_server_port) udp_server_port="$2"
-            echo "${scriptname}: udp_server_port used at device: ${udp_server_port}"
+        -udp_uplink_port) udp_uplink_port="$2"
+            echo "${scriptname}: udp_uplink_port used at device: ${udp_uplink_port}"
             shift ;;
-        -udp_device_port) udp_device_port="$2"
-            echo "${scriptname}: udp_device_port used at server: ${udp_device_port}"
+        -udp_downlink_port) udp_downlink_port="$2"
+            echo "${scriptname}: udp_downlink_port used at server: ${udp_downlink_port}"
             shift ;;
         --) shift
             break ;;
@@ -66,16 +66,16 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 ##########################################
 # start server receving side proces
 ##########################################
-echo "${scriptname}: listening for udp packets on server at port ${udp_server_port} for packets from ${test_id}."
-/usr/bin/node ${udp_echo_app_receive} -t ${duration} -p ${udp_server_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
+echo "${scriptname}: listening for udp packets on server at port ${udp_uplink_port} for packets from ${test_id}."
+/usr/bin/node ${udp_app_receive} -t ${duration} -p ${udp_uplink_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
 
 ##########################################
 # start device site sending proces
 ##########################################
-echo "${scriptname}: run udp test on device to server port ${udp_server_port} with interval of ${interval} and pakage size of ${bytes}Bytes from dev ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_send}   -h ${serverIP} \
+echo "${scriptname}: run udp uplink test on device to server port ${udp_uplink_port} with interval of ${interval} and pakage size of ${bytes}Bytes from dev ${test_id}."
+ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_send}   -h ${serverIP} \
                                                                        -c up_${test_id} \
-                                                                       -p ${udp_server_port} \
+                                                                       -p ${udp_uplink_port} \
                                                                        -s ${bytes} \
                                                                        -i ${interval} \
                                                                        -j true \
@@ -86,17 +86,17 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_send}   -h ${serv
 ##########################################
 # start device site receiving proces
 ##########################################
-echo "${scriptname}: listening for udp packets on device at port ${udp_device_port} for packets from ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_receive} -t ${duration} -p ${udp_device_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
+echo "${scriptname}: listening for udp packets on device at port ${udp_downlink_port} for packets from ${test_id}."
+ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_receive} -t ${duration} -p ${udp_downlink_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
 
 
 ##########################################
 # start server  side sending proces
 ##########################################
-echo "${scriptname}: run udp test on server to device port ${udp_device_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id}."
-/usr/bin/node ${udp_echo_app_send}                                     -h ${serverIP} \
+echo "${scriptname}: run udp downlink test on server to device port ${udp_downlink_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id}."
+/usr/bin/node ${udp_app_send}                                     -h ${serverIP} \
                                                                        -c down_${test_id} \
-                                                                       -p ${udp_device_port} \
+                                                                       -p ${udp_downlink_port} \
                                                                        -s ${bytes} \
                                                                        -i ${interval} \
                                                                        -j true \

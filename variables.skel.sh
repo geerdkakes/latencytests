@@ -18,9 +18,9 @@ mqtt_delay_app="/usr/local/mqtt-delay/server.js"
 
 # Path to UDP Echo tool
 udp_echo_app_server="/usr/local/ServerSocketTCP_UDP/udp_server.js"
-udp_echo_app_receive="/usr/local/ServerSocketTCP_UDP/udp_server.js"
+udp_app_receive="/usr/local/ServerSocketTCP_UDP/udp_server.js"
 udp_echo_app_device="/usr/local/ServerSocketTCP_UDP/udp_client.js"
-udp_echo_app_send="/usr/local/ServerSocketTCP_UDP/udp_client.js"
+udp_app_send="/usr/local/ServerSocketTCP_UDP/udp_client.js"
 
 # Path to iperf
 iperf2_app="/usr/local/iperf2/src/iperf"
