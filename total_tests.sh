@@ -76,6 +76,7 @@ function run_test_tasks(){
     check_variable udp_test_user_1
     check_variable udp_test_device_ip_1
     check_variable udp_server_port_1
+    check_variable udp_device_port_1
     check_variable mqtt_test
     check_variable mqtt_data_size
     check_variable mqtt_interpacket_time
@@ -120,11 +121,11 @@ function run_test_tasks(){
     # start udp tests
     if [ "${udp_test_1^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting udp tests 1"
-        ./UDP_echo_test.sh -b ${udp_data_size_1} -t ${test_duration} -s_ip ${udp_server_ip_1} -d_ip ${udp_test_device_ip_1} -i ${udp_interpacket_time_1} -d_user ${udp_test_user_1} -s ${session_id} -test_id dev1 -udp_server_port  ${udp_server_port_1} &
+        ./UDP_test.sh -b ${udp_data_size_1} -t ${test_duration} -s_ip ${udp_server_ip_1} -d_ip ${udp_test_device_ip_1} -i ${udp_interpacket_time_1} -d_user ${udp_test_user_1} -s ${session_id} -test_id dev1 -udp_server_port  ${udp_server_port_1} -udp_device_port ${udp_device_port_1} &
     fi
     if [ "${udp_test_2^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting udp tests 2"
-        ./UDP_echo_test.sh -b ${udp_data_size_2} -t ${test_duration} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_server_port  ${udp_server_port_2} &
+        ./UDP_test.sh -b ${udp_data_size_2} -t ${test_duration} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_server_port  ${udp_server_port_2} -udp_device_port ${udp_device_port_2} &
     fi
 
     # start mqtt tests
