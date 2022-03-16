@@ -86,6 +86,13 @@ else
         ports="${ports} or ${port}"
     done
 fi
+if [ -z ${prefixmodemIP+x} ]; then
+    # ports not set
+    prefixmodemIP=""
+else
+    readarray -td, prefixmodemIP_arr <<<"$prefixmodemIP,"; 
+    unset 'prefixmodemIP_arr[-1]'
+fi
 readarray -td, protocols_arr <<<"$protocols,"; 
 unset 'protocols_arr[-1]'
 protocols="${protocols_arr[0]}"
@@ -102,12 +109,18 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 ###########################################
 # finding interface on device
 ###########################################
-deviceinterface=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "${prefixmodemIP}" -B 1 | head -1 | sed 's/\(.*\)\:\s\(.*\)/\1/')
+for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
+    echo "${scriptname}: trying to find device interface using IP prefix: ${prefixmodemIP} for device ${test_id}"
+    deviceinterface=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "${prefixmodemIP}" -B 1 | head -1 | sed 's/\(.*\)\:\s\(.*\)/\1/')
+    if [ ! "${deviceinterface}" = "" ]; then
+        break
+    fi
+done
 if [ "${deviceinterface}" = "" ]; then
   echo "${scriptname}: no ethernet device found to monitor. exiting"
   exit 1
 else
-  echo "${scriptname}: found device interface ${deviceinterface}"
+  echo "${scriptname}: found device interface ${deviceinterface} for device ${test_id}"
 fi
 ###########################################
 # starting pcap logging on server and device
