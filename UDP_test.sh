@@ -67,13 +67,13 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 # start server receving side proces
 ##########################################
 echo "${scriptname}: listening for udp packets on server at port ${udp_server_port} for packets from ${test_id}."
-/usr/bin/node ${udp_echo_app_server} -t ${duration} -p ${udp_server_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
+/usr/bin/node ${udp_echo_app_receive} -t ${duration} -p ${udp_server_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
 
 ##########################################
 # start device site sending proces
 ##########################################
 echo "${scriptname}: run udp test on device to server port ${udp_server_port} with interval of ${interval} and pakage size of ${bytes}Bytes from dev ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_device} -h ${serverIP} \
+ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_send}   -h ${serverIP} \
                                                                        -c up_${test_id} \
                                                                        -p ${udp_server_port} \
                                                                        -s ${bytes} \
@@ -87,14 +87,14 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_device} -h ${serv
 # start device site receiving proces
 ##########################################
 echo "${scriptname}: listening for udp packets on device at port ${udp_device_port} for packets from ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_device} -t ${duration} -p ${udp_device_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
+ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_echo_app_receive} -t ${duration} -p ${udp_device_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
 
 
 ##########################################
 # start server  side sending proces
 ##########################################
 echo "${scriptname}: run udp test on server to device port ${udp_device_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id}."
-/usr/bin/node ${udp_echo_app_device}                                   -h ${serverIP} \
+/usr/bin/node ${udp_echo_app_send}                                     -h ${serverIP} \
                                                                        -c down_${test_id} \
                                                                        -p ${udp_device_port} \
                                                                        -s ${bytes} \
