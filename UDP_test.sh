@@ -75,7 +75,7 @@ fi
 ###########################################
 for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
     echo "${scriptname}: trying to find device IP with prefix: ${prefixmodemIP} for device ${test_id}"
-    deviceipaddress=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "inet ${prefixmodemIP}"  | awk '{print $2}')
+    device_modem_ipaddress=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "inet ${prefixmodemIP}"  | awk '{print $2}')
     if [ ! "${device_modem_ipaddress}" = "" ]; then
         echo "${scriptname}: device ip found for device ${test_id}: ${device_modem_ipaddress}"
         break
