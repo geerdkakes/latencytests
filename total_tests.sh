@@ -125,13 +125,13 @@ function run_test_tasks(){
     fi
     if [ "${udp_test_2^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting udp tests 2"
-        ./UDP_test.sh -b ${udp_data_size_2} -t ${test_duration} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_uplink_port  ${udp_server_port_2} -udp_downlink_port ${udp_device_port_2} &
+        ./UDP_test.sh -b ${udp_data_size_2} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_uplink_port  ${udp_server_port_2} -udp_downlink_port ${udp_device_port_2} &
     fi
 
     # start mqtt tests
     if [ "${mqtt_test^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting mqtt tests"
-        ./MQTT_test.sh -b ${mqtt_data_size} -t ${test_duration} -s_ip ${mqtt_server_ip} -d_ip ${mqtt_test_device_ip} -i ${mqtt_interpacket_time} -d_user ${mqtt_test_user} -s ${session_id} &
+        ./MQTT_test.sh -b ${mqtt_data_size} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip} -s_ip ${mqtt_server_ip} -d_ip ${mqtt_test_device_ip} -i ${mqtt_interpacket_time} -d_user ${mqtt_test_user} -s ${session_id} &
     fi
 
     # start iperf3 tests

@@ -64,6 +64,7 @@ if [ -z ${prefixmodemIP+x} ]; then
     # ports not set
     prefixmodemIP=""
     echo "${scriptname}: prefixmodemIP not found, please specify using option \"-d_ip_modem_prefix\". Needed to find the IP address to send udp packets to."
+    exit 1
 else
     readarray -td, prefixmodemIP_arr <<<"$prefixmodemIP,"; 
     unset 'prefixmodemIP_arr[-1]'
@@ -80,6 +81,10 @@ for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
         break
     fi
 done
+if [ "${device_modem_ipaddress}" = "" ]; then
+    echo "no modem ip address found for dev: ${test_id}, exiting"
+    exit 1
+fi
 
 ###########################################
 # create data directories with session id
