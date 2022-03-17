@@ -14,9 +14,8 @@ from plotly import graph_objs as go, io as pio, tools
 from datetime import datetime
 
 fig_lat = None
-interactive_desktop = os.environ["interactive_desktop"]
-if interactive_desktop == "":
-    interactive_desktop = False
+interactive_desktop = os.getenv("interactive_desktop", default=None)
+
 data_dir_server = os.environ["data_dir_server"]
 if data_dir_server == "":
     data_dir_server = "."
