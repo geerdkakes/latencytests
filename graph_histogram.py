@@ -183,8 +183,9 @@ def save_image(figure, filepath):
     try:
         print("...html...")
         pio.write_html(figure, filepath + '.html')
-        print("...png...")
-        pio.write_image(fig=figure, format="png", file=filepath+".png", engine="kaleido")
+        # don't write png file. takes to much time
+        # print("...png...")
+        # pio.write_image(fig=figure, format="png", file=filepath+".png", engine="kaleido")
         print("finished writing files")
     except Exception as e:
         print("Could not write figure to file: ", filepath,e)
