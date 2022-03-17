@@ -292,6 +292,6 @@ if [ "${action^^}" =  "ALL" ] || [ "${action^^}" =  "ANALYSE" ] ; then
 fi
 if [ "${action^^}" =  "ALL" ] || [ "${action^^}" =  "GRAPH" ] ; then
     read_csv collect_lines
-    sleep 30
+    sleep 5
     graph_tests
 fi
