@@ -177,10 +177,13 @@ def get_xlim(df):
     return [minimum - margin,maximum + margin]
 
 def save_image(figure, filepath):
+    print("saving pio graphs...")
     try:
-        pio.write_image(fig=figure, format="png", file=filepath+".png", engine="kaleido")
+        print("...html...")
         pio.write_html(figure, filepath + '.html')
-
+        print("...png...")
+        pio.write_image(fig=figure, format="png", file=filepath+".png", engine="kaleido")
+        print("finished writing files")
     except Exception as e:
         print("Could not write figure to file: ", filepath,e)
 
@@ -246,7 +249,7 @@ for pars_index, pars in enumerate(variables):
     df_lost = pd.DataFrame(lost_packets_for_frame)
 
     # docs: https://yiyibooks.cn/meikunyuan6/pandas/pandas/generated/pandas.DataFrame.plot.html#pandas.DataFrame.plot
-
+    print("create histogram figures for " + pars[2] + "...")
     pie1 = df_lat.plot.hist(histtype='step',cumulative=True, density=True, rwidth='float',grid=True, bins=500, figsize=[15, 7], xlim=get_xlim(df_lat))
     set_legend()
     pie2 = df_lat.plot.hist(histtype='step', cumulative=False,rwidth='float',grid=True, bins=500, figsize=[15, 7], xlim=get_xlim(df_lat))
@@ -272,6 +275,7 @@ for pars_index, pars in enumerate(variables):
             pd.DataFrame(dict(time=df_timeline[column], latency=df_lat[column])).to_csv(histogramdir + '/' +  'latency' + column + '.csv')
     if fig_lat is None:
         nr_graphs = df_lat.shape[1]*len_vars
+        print("create latency figures... ")
         fig_lat = make_subplots(rows=nr_graphs, cols=1,
                         shared_xaxes=False,
                         vertical_spacing=0.01,
@@ -317,11 +321,13 @@ for pars_index, pars in enumerate(variables):
     fig_lat.update_layout(height=10000, width=9600,
                             title_text="latency")
 
-if interactive_desktop:                    
+if interactive_desktop:
+    print("generating interactie latency graph...")
     fig_lat.show()
 
 save_image(fig_lat, histogramdir + '/' + 'lantency_graph')
 if interactive_desktop:
+    print("generating interactive history graphs......")
     plt.show()
     # fig = px.line(df, x = 'timestamp', y = 'latency', title=path_leaf(filename))
 infofile_handler.close()
