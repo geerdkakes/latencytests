@@ -14,7 +14,9 @@ from plotly import graph_objs as go, io as pio, tools
 from datetime import datetime
 
 fig_lat = None
-
+interactive_desktop = os.environ["interactive_desktop"]
+if interactive_desktop == "":
+    interactive_desktop = False
 data_dir_server = os.environ["data_dir_server"]
 if data_dir_server == "":
     data_dir_server = "."
@@ -178,6 +180,8 @@ def get_xlim(df):
 def save_image(figure, filepath):
     try:
         pio.write_image(fig=figure, format="png", file=filepath+".png", engine="kaleido")
+        pio.write_html(figure, filepath + '.html')
+
     except Exception as e:
         print("Could not write figure to file: ", filepath,e)
 
@@ -312,12 +316,16 @@ for pars_index, pars in enumerate(variables):
                                       row=row,
                                       col=1 )
     fig_lat.update_layout(height=10000, width=9600,
-                            title_text="latency",
-                        )
-fig_lat.show()
+                            title_text="latency")
+
+if interactive_desktop:                    
+    fig_lat.show()
+
 save_image(fig_lat, histogramdir + '/' + 'lantency_graph')
-plt.show()
+if interactive_desktop:
+    plt.show()
     # fig = px.line(df, x = 'timestamp', y = 'latency', title=path_leaf(filename))
 infofile_handler.close()
 print("stored files in: " + histogramdir)
-print("to zip, run: zip graphs" + currentdate + ".zip " + histogramdir + "/*")
+print("to zip:")
+print("cd " + os.path.join(data_dir_server, "images_histogram") + "; zip -r " + currentdate + ".zip " + currentdate + "/*")
