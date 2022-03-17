@@ -38,6 +38,9 @@ do
         -d_ip) deviceIP="$2"
             echo "${scriptname}: Device IP to contact: ${deviceIP}"
             shift ;;
+        -d_ip_modem_prefix) prefixmodemIP="$2"
+            echo "${scriptname}: modem prefix ip: ${prefixmodemIP}"
+            shift ;;
         -d_user) userid_device="$2"
             echo "${scriptname}: userid used at device: ${userid_device}"
             shift ;;
@@ -57,6 +60,27 @@ do
     shift
 done
 
+if [ -z ${prefixmodemIP+x} ]; then
+    # ports not set
+    prefixmodemIP=""
+    echo "${scriptname}: prefixmodemIP not found, please specify using option \"-d_ip_modem_prefix\". Needed to find the IP address to send udp packets to."
+else
+    readarray -td, prefixmodemIP_arr <<<"$prefixmodemIP,"; 
+    unset 'prefixmodemIP_arr[-1]'
+fi
+
+###########################################
+# find device ip address
+###########################################
+for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
+    echo "${scriptname}: trying to find device IP with prefix: ${prefixmodemIP} for device ${test_id}"
+    deviceipaddress=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "inet ${prefixmodemIP}"  | awk '{print $2}'
+    if [ ! "${device_modem_ipaddress}" = "" ]; then
+        echo "${scriptname}: device ip found for device ${test_id}: ${device_modem_ipaddress}"
+        break
+    fi
+done
+
 ###########################################
 # create data directories with session id
 ###########################################
@@ -73,7 +97,7 @@ echo "${scriptname}: listening for udp packets on server at port ${udp_uplink_po
 # start device site sending proces
 ##########################################
 echo "${scriptname}: run udp uplink test on device to server port ${udp_uplink_port} with interval of ${interval} and pakage size of ${bytes}Bytes from dev ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_send}   -h ${serverIP} \
+ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_send}        -h ${serverIP} \
                                                                        -c up_${test_id} \
                                                                        -p ${udp_uplink_port} \
                                                                        -s ${bytes} \
@@ -93,8 +117,8 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_receive} -t ${duration
 ##########################################
 # start server  side sending proces
 ##########################################
-echo "${scriptname}: run udp downlink test on server to device port ${udp_downlink_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id}."
-/usr/bin/node ${udp_app_send}                                     -h ${serverIP} \
+echo "${scriptname}: run udp downlink test on server to device port ${udp_downlink_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id} with IP ${device_modem_ipaddress}."
+/usr/bin/node ${udp_app_send}                                          -h ${device_modem_ipaddress} \
                                                                        -c down_${test_id} \
                                                                        -p ${udp_downlink_port} \
                                                                        -s ${bytes} \
