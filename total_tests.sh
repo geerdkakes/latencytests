@@ -95,7 +95,7 @@ function run_test_tasks(){
     check_variable iperf3_bitrate
     check_variable pcap_server1_ip
     check_variable server_interface
-    check_variable modem_prefix_ip
+    check_variable modem_prefix_ip_device1
     check_variable pcap_device1_user
     check_variable pcap_device1
     check_variable pcap_device1_ip
@@ -111,21 +111,21 @@ function run_test_tasks(){
     # start recording pcaps
     if [ "${pcap_device1^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting pcap logging device 1"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server1_ip} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} -d_ip_modem_prefix ${modem_prefix_ip_device1} -s_if ${server_interface} -s_ip ${pcap_server1_ip} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
     fi
     if [ "${pcap_device2^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting pcap logging device 2"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} -d_ip_modem_prefix ${modem_prefix_ip} -s_if ${server_interface} -s_ip ${pcap_server2_ip} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} -d_ip_modem_prefix ${modem_prefix_ip_device2} -s_if ${server_interface} -s_ip ${pcap_server2_ip} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
     fi
 
     # start udp tests
     if [ "${udp_test_1^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting udp tests 1"
-        ./UDP_test.sh -b ${udp_data_size_1} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip} -s_ip ${udp_server_ip_1} -d_ip ${udp_test_device_ip_1} -i ${udp_interpacket_time_1} -d_user ${udp_test_user_1} -s ${session_id} -test_id dev1 -udp_uplink_port  ${udp_server_port_1} -udp_downlink_port ${udp_device_port_1} &
+        ./UDP_test.sh -b ${udp_data_size_1} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip_device1} -s_ip ${udp_server_ip_1} -d_ip ${udp_test_device_ip_1} -i ${udp_interpacket_time_1} -d_user ${udp_test_user_1} -s ${session_id} -test_id dev1 -udp_uplink_port  ${udp_server_port_1} -udp_downlink_port ${udp_device_port_1} &
     fi
     if [ "${udp_test_2^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting udp tests 2"
-        ./UDP_test.sh -b ${udp_data_size_2} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_uplink_port  ${udp_server_port_2} -udp_downlink_port ${udp_device_port_2} &
+        ./UDP_test.sh -b ${udp_data_size_2} -t ${test_duration} -d_ip_modem_prefix ${modem_prefix_ip_device2} -s_ip ${udp_server_ip_2} -d_ip ${udp_test_device_ip_2} -i ${udp_interpacket_time_2} -d_user ${udp_test_user_2} -s ${session_id} -test_id dev2 -udp_uplink_port  ${udp_server_port_2} -udp_downlink_port ${udp_device_port_2} &
     fi
 
     # start mqtt tests
@@ -235,9 +235,9 @@ function collect_lines() {
     if [ "${mqtt_test^^}" =  "TRUE" ] ; then
         ((mqtt_tests++))
     fi
-    if [ "${iperf3_test^^}" =  "TRUE" ] ; then
-        ((iperf3_tests++))
-    fi
+    # if [ "${iperf3_test^^}" =  "TRUE" ] ; then
+    #     ((iperf3_tests++))
+    # fi
 
     echo "${scriptname}: lines to graph: ${lines_to_graph}"
 }
