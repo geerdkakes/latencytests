@@ -12,27 +12,13 @@ import sys
 from plotly.subplots import make_subplots
 from plotly import graph_objs as go, io as pio, tools
 from datetime import datetime
-
+basename = ""
+minimum_samples = 1000
 fig_lat = None
 interactive_desktop = os.getenv("interactive_desktop", default=None)
-minimum_samples = 1000
-data_dir_server = os.environ["data_dir_server"]
-if data_dir_server == "":
-    data_dir_server = "."
-currentdate = datetime.today().strftime('%Y-%m-%d-%H.%M.%S')
-histogramdir = os.path.join(data_dir_server, "images_histogram", currentdate)
-try:
-    os.makedirs(histogramdir, exist_ok = True)
-    print("Directory '%s' created successfully" %histogramdir)
-except OSError as error:
-    print("Directory '%s' can not be created" %histogramdir)
+data_dir_server = os.getenv("data_dir_server", default=None)
 
 
-infofile = histogramdir + '/infofile.txt'
-print("storing al statistics in '%s'" %infofile)
-infofile_handler = open(infofile,"w")
-infofile_handler.write("protocols: " + sys.argv[1] +'\n')
-infofile_handler.write("testruns: " + sys.argv[2] +'\n')
 
 
 if len(sys.argv) < 3:
@@ -46,8 +32,27 @@ for index, element in enumerate(sys.argv[2:]):
     filedict = {}
     filedict['filename'] = argarr[0]
     filedict['description'] = argarr[1]
+    if basename == "":
+        basename = argarr[1][:11]
+        print("set basename to: " + basename)
     files_to_analyse.append(filedict)
 
+if data_dir_server == None:
+    data_dir_server = "."
+currentdate = datetime.today().strftime('%Y-%m-%d-%H.%M.%S')
+histogramdir = os.path.join(data_dir_server, "images_histogram", basename+"_"+currentdate)
+try:
+    os.makedirs(histogramdir, exist_ok = True)
+    print("Directory '%s' created successfully" %histogramdir)
+except OSError as error:
+    print("Directory '%s' can not be created" %histogramdir)
+
+
+infofile = histogramdir + '/infofile.txt'
+print("storing al statistics in '%s'" %infofile)
+infofile_handler = open(infofile,"w")
+infofile_handler.write("protocols: " + sys.argv[1] +'\n')
+infofile_handler.write("testruns: " + sys.argv[2] +'\n')
 variables = []
 
 for protocol in protocols:
