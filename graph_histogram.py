@@ -15,7 +15,7 @@ from datetime import datetime
 
 fig_lat = None
 interactive_desktop = os.getenv("interactive_desktop", default=None)
-
+minimum_samples = 1000
 data_dir_server = os.environ["data_dir_server"]
 if data_dir_server == "":
     data_dir_server = "."
@@ -202,12 +202,13 @@ for pars_index, pars in enumerate(variables):
         lat_analysis_files.append(read_lat_result)
         length_arr = len(read_lat_result['latencies'])
         lengt_arr_interp = len(read_lat_result['source_interpackettimes'])
-        if minlen == None:
+        if minlen == None and length_arr >= minimum_samples:
             minlen = length_arr
             min_interp_len = lengt_arr_interp
         else:
-            minlen = min(length_arr, minlen)
-            min_interp_len = min(min_interp_len,lengt_arr_interp)
+            if length_arr >= minimum_samples:
+                minlen = min(length_arr, minlen)
+                min_interp_len = min(min_interp_len,lengt_arr_interp)
     lat_data_for_frame = {}
     timeline_for_frame = {}
     lost_packets_for_frame = {}
@@ -215,6 +216,8 @@ for pars_index, pars in enumerate(variables):
     destination_interp_data_for_frame = {}
     pcktsize_data_for_frames = {}
     for lat_data in lat_analysis_files:
+        if len(lat_data['latencies']) < minimum_samples:
+            continue
         print("analysing: " +lat_data['basename'] )
         lat_data_for_frame[lat_data['basename']+'_latency'] = lat_data['latencies'][:minlen]
         lost_packets_for_frame[lat_data['basename']+'_latency'] = lat_data['losts'][:minlen]
