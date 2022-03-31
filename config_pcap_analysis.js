@@ -7,7 +7,7 @@ var config ={};
 // Timing variables:
 // maximum delay in which packets are still matched.
 // be warned. The larger the delay (in useconds), the longer the algorith will run
-config.max_delay = 500000; // 0,5 seconds
+config.max_delay = 1500000; // 1,5 seconds
 
 // maximum error allowed to match packets. The larger this value the longer the search
 config.max_error = 500000; // 0,5 seconds
