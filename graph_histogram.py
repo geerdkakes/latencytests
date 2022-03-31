@@ -13,12 +13,13 @@ from plotly.subplots import make_subplots
 from plotly import graph_objs as go, io as pio, tools
 from datetime import datetime
 basename = ""
-minimum_samples = 1000
+
 fig_lat = None
 interactive_desktop = os.getenv("interactive_desktop", default=None)
 data_dir_server = os.getenv("data_dir_server", default=None)
+minimum_samples =  int(os.getenv("min_samples", default=1000))
 
-
+print("using minimal samples: " + str(minimum_samples))
 
 
 if len(sys.argv) < 3:
