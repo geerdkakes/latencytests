@@ -115,7 +115,7 @@ for dev in ${devs[@]}; do
         [ -e "$filename_c" ] || continue
         echo "found matching filename: $filename_c"
         echo  "comparing files and storing result in: ${filename_result_a_c}"
-        echo node --max-old-space-size=12000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -r ${filename_result} --compare=${filename_a},${filename_c}
+        echo node --max-old-space-size=12000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -r ${filename_result_a_c} --compare=${filename_a},${filename_c}
         node --max-old-space-size=12000 "${pcap_analysis_app}" -c ${pcap_analysis_config_file} -r ${filename_result_a_c} --compare=${filename_a},${filename_c}
         [ -e "$filename_b" ] || continue
         echo "found matching filename: $filename_b"
