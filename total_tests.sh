@@ -140,6 +140,13 @@ function run_test_tasks(){
         ./run_iperf3.sh -s ${session_id} -M ${iperf3_mtu_size} -bitrate ${iperf3_bitrate} -s_ip ${iperf3_server_ip} -d_ip ${iperf3_test_device_ip} -t ${test_duration} -d ${iperf3_direction} -d_user ${iperf3_test_user} -protocol ${iperf3_protocol} -streams ${iperf3_streams} -port ${iperf3_port} &
     fi
 
+    # start nuttcp tests
+    if [ "${nuttcp_dev1_test^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting nuttcp tests"
+        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev1_mtu_size} -bitrate ${nuttcp_dev1_bitrate} -s_ip ${nuttcp_dev1_server_ip} d_ip ${nuttcp_dev1_device_ip} -t ${test_duration} -d ${nuttcp_dev1_direction} -d_user ${nuttcp_dev1_test_user} -protocol ${nuttcp_dev1_protocol} -streams ${nuttcp_dev1_streams} -dataport ${nuttcp_dev1_data_port} -controlport ${nuttcp_dev1_control_port} &
+    fi
+
+
     sleep $((test_duration+10))
 }
 #############################################

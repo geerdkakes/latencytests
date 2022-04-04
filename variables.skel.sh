@@ -25,3 +25,6 @@ udp_app_send="/usr/local/ServerSocketTCP_UDP/udp_client.js"
 # Path to iperf
 iperf2_app="/usr/local/iperf2/src/iperf"
 iperf3_app="/usr/local/iperf3/src/iperf3"
+
+# Path to nuttcp
+nuttcp_app="/usr/local/nuttcp-8.2.2/nuttcp-8.2.2"
