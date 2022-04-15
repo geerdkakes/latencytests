@@ -82,17 +82,17 @@ function run_test_tasks(){
     check_variable mqtt_interpacket_time
     check_variable mqtt_test_user
     check_variable mqtt_test_device_ip
-    check_variable iperf3_test
-    check_variable iperf3_test_user
-    check_variable iperf3_test_device_ip
-    check_variable iperf3_direction
+    check_variable iperf3_dev1_test
+    check_variable iperf3_dev1_test_user
+    check_variable iperf3_dev1_test_device_ip
+    check_variable iperf3_dev1_direction
     check_variable test_duration
     check_variable session_id
-    check_variable iperf3_mtu_size
-    check_variable iperf3_server_ip
-    check_variable iperf3_streams
-    check_variable iperf3_protocol
-    check_variable iperf3_bitrate
+    check_variable iperf3_dev1_mtu_size
+    check_variable iperf3_dev1_server_ip
+    check_variable iperf3_dev1_streams
+    check_variable iperf3_dev1_protocol
+    check_variable iperf3_dev1_bitrate
     check_variable pcap_server1_ip
     check_variable server_interface
     check_variable modem_prefix_ip_device1
@@ -135,11 +135,15 @@ function run_test_tasks(){
     fi
 
     # start iperf3 tests
-    if [ "${iperf3_test^^}" =  "TRUE" ] ; then
-        echo "${scriptname}: starting iperf3 tests"
-        ./run_iperf3.sh -s ${session_id} -M ${iperf3_mtu_size} -bitrate ${iperf3_bitrate} -s_ip ${iperf3_server_ip} -d_ip ${iperf3_test_device_ip} -t ${test_duration} -d ${iperf3_direction} -d_user ${iperf3_test_user} -protocol ${iperf3_protocol} -streams ${iperf3_streams} -port ${iperf3_port} &
+    if [ "${iperf3_dev1_test^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting iperf3 dev 1 tests"
+        ./run_iperf3.sh -s ${session_id} -M ${iperf3_dev1_mtu_size} -test_id dev1 -bitrate ${iperf3_dev1_bitrate} -s_ip ${iperf3_dev1_server_ip} -d_ip ${iperf3_dev1_test_device_ip} -t ${test_duration} -d ${iperf3_dev1_direction} -d_user ${iperf3_dev1_test_user} -protocol ${iperf3_dev1_protocol} -streams ${iperf3_dev1_streams} -port ${iperf3_dev1_port} &
     fi
-
+    # start iperf3 tests
+    if [ "${iperf3_dev2_test^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting iperf3 dev 2 tests"
+        ./run_iperf3.sh -s ${session_id} -M ${iperf3_dev2_mtu_size} -test_id dev2 -bitrate ${iperf3_dev2_bitrate} -s_ip ${iperf3_dev2_server_ip} -d_ip ${iperf3_dev2_test_device_ip} -t ${test_duration} -d ${iperf3_dev2_direction} -d_user ${iperf3_dev2_test_user} -protocol ${iperf3_dev2_protocol} -streams ${iperf3_dev2_streams} -port ${iperf3_dev2_port} &
+    fi
     # start nuttcp tests
     if [ "${nuttcp_dev1_test^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting nuttcp tests"
