@@ -147,7 +147,7 @@ function run_test_tasks(){
     # start nuttcp tests
     if [ "${nuttcp_dev1_test^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting nuttcp tests"
-        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev1_mtu_size} -bitrate ${nuttcp_dev1_bitrate} -s_ip ${nuttcp_dev1_server_ip} d_ip ${nuttcp_dev1_device_ip} -t ${test_duration} -d ${nuttcp_dev1_direction} -d_user ${nuttcp_dev1_test_user} -protocol ${nuttcp_dev1_protocol} -streams ${nuttcp_dev1_streams} -dataport ${nuttcp_dev1_data_port} -controlport ${nuttcp_dev1_control_port} &
+        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev1_mtu_size} -bitrate ${nuttcp_dev1_bitrate} -s_ip ${nuttcp_dev1_server_ip} -d_ip ${nuttcp_dev1_device_ip} -t ${test_duration} -d ${nuttcp_dev1_direction} -d_user ${nuttcp_dev1_test_user} -protocol ${nuttcp_dev1_protocol} -streams ${nuttcp_dev1_streams} -dataport ${nuttcp_dev1_data_port} -controlport ${nuttcp_dev1_control_port} &
     fi
 
 
