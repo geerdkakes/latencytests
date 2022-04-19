@@ -103,7 +103,7 @@ function run_test_tasks(){
     check_variable pcap_device1_ports
     check_variable pcap_device1_snaplen
     check_variable pcap_device1_protocols
-    check_variable iperf3_port
+    check_variable iperf3_dev1_port
 
     echo
     echo "${scriptname}: running test session ${session_id} for ${test_duration} seconds"
