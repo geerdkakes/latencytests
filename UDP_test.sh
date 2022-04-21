@@ -96,13 +96,13 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 # start server receving side proces
 ##########################################
 echo "${scriptname}: listening for udp packets on server at port ${udp_uplink_port} for packets from ${test_id}."
-/usr/bin/node ${udp_app_receive} -t ${duration} -p ${udp_uplink_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
+node ${udp_app_receive} -t ${duration} -p ${udp_uplink_port} -r false > ${data_dir_server}/${session_id}/server_received_${test_id}_UDP_echo_${testdate}.log  &
 
 ##########################################
 # start device site sending proces
 ##########################################
 echo "${scriptname}: run udp uplink test on device to server port ${udp_uplink_port} with interval of ${interval} and pakage size of ${bytes}Bytes from dev ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_send}        -h ${serverIP} \
+ssh ${userid_device}@${deviceIP} "node ${udp_app_send}        -h ${serverIP} \
                                                                        -c up_${test_id} \
                                                                        -p ${udp_uplink_port} \
                                                                        -s ${bytes} \
@@ -116,14 +116,14 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_send}        -h ${serv
 # start device site receiving proces
 ##########################################
 echo "${scriptname}: listening for udp packets on device at port ${udp_downlink_port} for packets from ${test_id}."
-ssh ${userid_device}@${deviceIP} "/usr/bin/node ${udp_app_receive} -t ${duration} -p ${udp_downlink_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
+ssh ${userid_device}@${deviceIP} "node ${udp_app_receive} -t ${duration} -p ${udp_downlink_port} -r false > ${data_dir_device}/${session_id}/device_received_${test_id}_UDP_echo_${testdate}.log"  &
 
 
 ##########################################
 # start server  side sending proces
 ##########################################
 echo "${scriptname}: run udp downlink test on server to device port ${udp_downlink_port} with interval of ${interval} and pakage size of ${bytes} Bytes to dev ${test_id} with IP ${device_modem_ipaddress}."
-/usr/bin/node ${udp_app_send}                                          -h ${device_modem_ipaddress} \
+node ${udp_app_send}                                          -h ${device_modem_ipaddress} \
                                                                        -c down_${test_id} \
                                                                        -p ${udp_downlink_port} \
                                                                        -s ${bytes} \
