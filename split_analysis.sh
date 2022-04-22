@@ -38,7 +38,7 @@ d=(1 10)
 
 
 counter=1
-while IFS= read -r line
+while IFS= read -r line || [ -n "$line" ]
 do
     for i in ${a[@]}; do
         if [ "${counter}" == "${i}" ] ; then
