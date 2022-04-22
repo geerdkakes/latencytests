@@ -129,8 +129,8 @@ sleep 1
 echo "${scriptname}: running client side nuttcp test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${nuttcp_port}"
 echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} > ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log\""
 ssh ${userid_device}@${deviceIP} "date +'startetime:%s' > ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
-ssh ${userid_device}@${deviceIP} "direction:${direction} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
-ssh ${userid_device}@${deviceIP} "title:${session_id} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
+ssh ${userid_device}@${deviceIP} "echo direction:${direction} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
+ssh ${userid_device}@${deviceIP} "echo title:${session_id} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
 ssh ${userid_device}@${deviceIP} "${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
 if [ ${?} -eq 1 ]; then
     echo "${scriptname}:  Error while connecting from client site to nuttcp server"
