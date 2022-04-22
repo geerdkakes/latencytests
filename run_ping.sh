@@ -98,4 +98,4 @@ sleep 3
 # retrieve device logfile 
 ##########################################
 scp ${userid_device}@${deviceIP}:${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log  ${data_dir_server}/${session_id}/
-echo "${scriptname}: stored nuttcp output at ${data_dir_server}/${session_id}/device${testID}_ping_${testdate}.log"
+echo "${scriptname}: stored ping output at ${data_dir_server}/${session_id}/device${testID}_ping_${testdate}.log"
