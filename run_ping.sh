@@ -46,7 +46,7 @@ do
             echo "${scriptname}: userid used at device: ${userid_device}"
             shift ;;
         -interval) interval_msec="$2"
-            echo "${scriptname}: interval in msec used: ${interval}"
+            echo "${scriptname}: interval in msec used: ${interval_msec}"
             shift ;;
         -test_id) testID="$2"
             echo "${scriptname}: testID set to: ${testID}"
