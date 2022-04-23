@@ -243,10 +243,13 @@ function collect_lines() {
         done
         lines_to_graph="${lines_to_graph} ${data_dir_server}/${session_id}/compare_total_${dev}.csv:${session_id}_${dev}"
     done
-    ping_file_to_graph="$(ls ${data_dir_server}/${session_id}| grep -e '^device.*_ping_.*.log')"
-    if [ ! -z "${ping_file_to_graph}" ] ; then
-        ping_files_to_graph="${ping_files_to_graph} ${data_dir_server}/${session_id}/${ping_file_to_graph}"
-    fi
+    ping_file_to_graph=($(ls ${data_dir_server}/${session_id}| grep -e '^device.*_ping_.*.log'))
+    for pinglogfile in ${ping_file_to_graph[@]}; do
+        if [ ! -z "${pinglogfile}" ] ; then
+            echo "found ping log to graph: ${data_dir_server}/${session_id}/${pinglogfile}"
+            ping_files_to_graph="${ping_files_to_graph} ${data_dir_server}/${session_id}/${pinglogfile}"
+        fi
+    done
     # check which tests have run during all sessions
     if [ "${udp_test_1^^}" =  "TRUE" ] ; then
         ((udp_tests++))
@@ -296,6 +299,7 @@ function graph_tests() {
     echo
     echo " calling graph_ping_data.py"
     echo "./graph_ping_data.py ${ping_files_to_graph}"
+    echo ""
     ./graph_ping_data.py ${ping_files_to_graph}
 }
 
