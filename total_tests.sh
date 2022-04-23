@@ -243,7 +243,7 @@ function collect_lines() {
         done
         lines_to_graph="${lines_to_graph} ${data_dir_server}/${session_id}/compare_total_${dev}.csv:${session_id}_${dev}"
     done
-    ping_files_to_graph="${ping_files_to_graph} $(ls ${data_dir_server}/${session_id}| grep -e '^device.*_ping_.*.log')"
+    ping_files_to_graph="${ping_files_to_graph} ${data_dir_server}/${session_id}/$(ls ${data_dir_server}/${session_id}| grep -e '^device.*_ping_.*.log')"
     # check which tests have run during all sessions
     if [ "${udp_test_1^^}" =  "TRUE" ] ; then
         ((udp_tests++))
