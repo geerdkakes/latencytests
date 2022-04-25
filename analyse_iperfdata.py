@@ -9,7 +9,8 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import sys
 import os
-
+from datetime import datetime
+import re
 # run using: ./analyse_iperfdata.py ../datadir/Low_Latency_Test_Eindhoven_20211129_042742_Eindhoven_BIC_Usage_of_Radio_Resource_Monitoring_20211129_144832.csv ../datadir/20211129_02*/*.json
 
 rb_blocks_file=sys.argv[1]
@@ -51,53 +52,142 @@ data_files=sys.argv[2:]
 # this function is tested with iperf tcp
 #############################################################################################
 def load_iperf_json(filename):
+
+    deviceid = re.findall(r'\/([a-z0-9]*)_[a-z0-9]*_[0-9]*-[0-9]*-[0-9]*_[0-9]*\.[0-9]*\.json$', filename)[0]
+
     with open(filename,'r') as f:
         data = json.loads(f.read())
-    if data['start']['test_start']['protocol'] == 'TCP':
-        print("found tcp ")
-        if "end" in data:
-            if "sum" in data['end']:
-                data['end']['sum'] = data['end']['sum_received']
-                data['end']['sum']['packets'] = data['end']['sum_sent']['bytes'] / data['start']['test_start']['blksize']
-                data['end']['sum']['lost_bytes'] = data['end']['sum_sent']['bytes'] - data['end']['sum_received']['bytes']
-                data['end']['sum']['lost_packets'] = data['end']['sum']['lost_bytes'] / data['start']['test_start']['blksize']
-                data['end']['sum']['lost_percent'] = data['end']['sum']['lost_packets'] / data['end']['sum']['packets']
-        
-    df = pd.json_normalize(data, record_path =['intervals'], 
-        meta=[
+    if "start" in data and "test_start" in data['start']: 
+        if data['start']['test_start']['protocol'] == 'TCP':
+            print("found tcp ")
+            if "end" in data:
+                if "sum" in data['end']:
+                    data['end']['sum'] = data['end']['sum_received']
+                    data['end']['sum']['packets'] = data['end']['sum_sent']['bytes'] / data['start']['test_start']['blksize']
+                    data['end']['sum']['lost_bytes'] = data['end']['sum_sent']['bytes'] - data['end']['sum_received']['bytes']
+                    data['end']['sum']['lost_packets'] = data['end']['sum']['lost_bytes'] / data['start']['test_start']['blksize']
+                    data['end']['sum']['lost_percent'] = data['end']['sum']['lost_packets'] / data['end']['sum']['packets']
+            
+        df = pd.json_normalize(data, record_path =['intervals'], 
+            meta=[
 
-            ['start', 'timestamp', 'timesecs'],
-            ['start', 'timestamp', 'time'],
-            ['start', 'test_start', 'protocol'],
-            ['start', 'test_start', 'reverse'],
-            ['start', 'test_start', 'blksize'],
-            ['end', 'sum', 'seconds'],
-            ['end', 'sum', 'bytes'],
-            ['end', 'sum', 'bits_per_second'],
-            ['end', 'sum', 'lost_packets'],
-            ['end', 'sum', 'packets'],
-            ['end', 'sum', 'lost_percent'],
-            ['title']
+                ['start', 'timestamp', 'timesecs'],
+                ['start', 'timestamp', 'time'],
+                ['start', 'test_start', 'protocol'],
+                ['start', 'test_start', 'reverse'],
+                ['start', 'test_start', 'blksize'],
+                ['end', 'sum', 'seconds'],
+                ['end', 'sum', 'bytes'],
+                ['end', 'sum', 'bits_per_second'],
+                ['end', 'sum', 'lost_packets'],
+                ['end', 'sum', 'packets'],
+                ['end', 'sum', 'lost_percent'],
+                ['title']
 
-        ])
+            ], errors='ignore')
 
-    df['timestamp_microsec'] = (df['start.timestamp.timesecs'] + df['sum.start'])*1000000
-    # add an hour to align with resource block data
-    df['timestamp_milisec'] = df['timestamp_microsec'] / 1000 + 3600000
-    df['timestamp'] = df['timestamp_milisec'].apply(np.int64)
-    df['kbit_per_second'] = df['sum.bits_per_second'] / 1024
-    if data['start']['test_start']['reverse'] == 0:
-        # upload of data. we record the send data rate
-        df['up_Mbit_per_second'] = df['kbit_per_second'] / 1024
-        df['down_Mbit_per_second'] = 0
-        df['direction'] = 'up'
+        if 'end' in data and 'sum' in data['end'] and 'lost_percent' in data['end']['sum']:
+            print("found average lost percentage at end of report")
+        else:
+            # just fill in zero for sum:
+            df['end.sum.lost_percent'] = 0
+
+
+        df['timestamp_microsec'] = (df['start.timestamp.timesecs'] + df['sum.start'])*1000000
+        # add an hour to align with resource block data
+        df['timestamp_milisec'] = df['timestamp_microsec'] / 1000 + 7200000
+        df['timestamp'] = df['timestamp_milisec'].apply(np.int64)
+        df['kbit_per_second'] = df['sum.bits_per_second'] / 1024
+        if data['start']['test_start']['reverse'] == 0:
+            # upload of data. we record the send data rate
+            df['up_Mbit_per_second'] = df['kbit_per_second'] / 1024
+            df['down_Mbit_per_second'] = 0
+            df['direction'] = 'up'
+        else:
+            # download of data
+            df['down_Mbit_per_second'] = df['kbit_per_second'] / 1024
+            df['up_Mbit_per_second'] = 0
+            df['direction'] = 'down'
+        df['device'] = deviceid
+        # drop columns not needed
+        df = df.drop(columns=[ 'timestamp_microsec', 'timestamp_milisec', 'streams'])
+        df.set_index('timestamp')
     else:
-        # download of data
-        df['down_Mbit_per_second'] = df['kbit_per_second'] / 1024
-        df['up_Mbit_per_second'] = 0
-        df['direction'] = 'down'
-    # drop columns not needed
-    df = df.drop(columns=[ 'timestamp_microsec', 'timestamp_milisec', 'streams'])
+        # no data found in file. Populating empty datafile for 60 seconds
+        timestamp = int(os.path.getmtime(filename))*1000 + 7200000
+        if 'title' in data:
+            title = data['title']
+        else:
+            title = ""
+        empty_array = {
+            'timestamp': [x*1000 + timestamp for x in range(60)],
+            'up_Mbit_per_second': [0 for x in range(60)],
+            'down_Mbit_per_second': [0 for x in range(60)],
+            'title': [title for x in range(60)],
+            'packets_lost': [0 for x in range(60)],
+            'packets_send': [0 for x in range(60)],
+            'percentage_lost': [100 for x in range(60)],
+            'direction': ['' for x in range(60)],
+            'device': [deviceid for x in range(60)],
+            'end.sum.lost_percent': [100 for x in range(60)]
+
+        }
+
+        df = pd.DataFrame.from_dict(empty_array)
+        df.set_index('timestamp')
+        print("returning empty array for file: " + filename)
+
+    return df
+#############################################################################################
+# Load csv output data from iperf2
+# For each interval the bitrate and packet loss is determined
+# 
+# a pandas dataframe is returned with the data
+#
+# this function is tested with iperf2 using udp
+#############################################################################################
+def load_iperf_csv(filename):
+    names= [
+        "datetime_str",
+        "source_ip",
+        "source_port",
+        "dest_ip",
+        "dest_port",
+        "iperf_proc_num",
+        "time_interval",
+        "data_transferred_bytes",
+        "bits_per_second",
+        "jitter_ms",
+        "num_lost_pckts",
+        "packets_send",
+        "perc_lost",
+        "num_out_of_order"
+    ]
+
+    # convert datetime string to timestamp
+    # 20220315120825
+    def date_time_str_to_timestamp(number):
+        year = int(str(number)[:4])
+        month = int(str(number)[4:6])
+        day = int(str(number)[6:8])
+        hour = int(str(number)[8:10])
+        minute = int(str(number)[10:12])
+        seconds = int(str(number)[12:])
+        found_datetime = datetime(year, month, day, hour, minute, seconds)
+        return datetime.timestamp(found_datetime)
+    
+
+    df = pd.read_csv(filename,names=names)
+    df['direction'] = "down"
+    df.loc[df['source_port'] > 10000, 'direction'] = "up"
+    df['timestamp']  = df['datetime_str'].apply(date_time_str_to_timestamp)
+    df['timestamp'] = (df['timestamp'] * 1000  + 7200000 ).apply(np.int64)
+    df['kbit_per_second'] = df['bits_per_second'] / 1024
+    df['down_Mbit_per_second'] = 0
+    df['up_Mbit_per_second'] = 0
+    df.loc[df['direction'] == 'down', 'down_Mbit_per_second'] = df.loc[df['direction'] == 'down', 'kbit_per_second']/1024
+    df.loc[df['direction'] == 'up', 'up_Mbit_per_second'] = df.loc[df['direction'] == 'up', 'kbit_per_second']/1024
+    df = df.drop(columns=[ 'source_ip', 'source_port', 'dest_ip', 'dest_port', 'iperf_proc_num', 'time_interval'])
     df.set_index('timestamp')
     return df
 
@@ -120,7 +210,7 @@ def load_resource_blocks(filename):
     df['miliseconds'] = df['Time'].replace({r'(.*)\s\((\d+)\)' : r'\g<2>'}, regex=True).astype(np.int64)
 
     # create datetime field with second accuracy
-    df['DateTime'] = pd.to_datetime(df['DateTime'],format='%Y-%m-%d %H:%M:%S')
+    df['DateTime'] = pd.to_datetime(df['DateTime'],format='%Y-%m-%d %H:%M:%S DST')
 
     # create timestamp in miliseconds:
     df['nanoseconds'] = df['miliseconds'] * 1000000
@@ -203,7 +293,8 @@ def merge_dataframes(df_sub, df_data):
 
     df_sub = df_sub.iloc[start_s:end_s]
     df_data = df_data.iloc[start_d:end_d]
-    
+    rows_sub = df_sub.shape[0]
+
     columns_to_copy = []
     matched_array = []
     for col in df_sub.columns:
@@ -214,6 +305,8 @@ def merge_dataframes(df_sub, df_data):
     # find the matching timestaps in df_sub and copy the columns of interest in a seperate array
     for index, row in df_data.iterrows():
         index_sub = np.searchsorted(df_sub['timestamp'], row['timestamp'], side='left', sorter=None)
+        if index_sub >= rows_sub:
+            index_sub=index_sub -1
         for i_s, column in enumerate(columns_to_copy):
             matched_array[i_s].append(df_sub.iloc[index_sub][column])
     # stop warning before copying the found values to df_data
@@ -375,7 +468,8 @@ def read_pcap_analysis_csv(filename):
 
 # load resource block file from U2020 tool
 df_resourceblocks = load_resource_blocks(rb_blocks_file)
-
+df_resourceblocks.to_csv('resourceblocks.csv')
+print(df_resourceblocks)
 averages = {
     "average_up_Mbit_per_second": [],
     "average_down_Mbit_per_second": [],
@@ -398,7 +492,9 @@ for index, file in enumerate(data_files):
     print("filename: " + filename + " and extension: " + file_extension)
     if file_extension == '.json':
         df_iperf = load_iperf_json(file)
+        print(df_iperf)
         df_iperf = merge_dataframes(df_resourceblocks, df_iperf)
+        print(df_iperf)
         averages["average_up_Mbit_per_second"].append(df_iperf['up_Mbit_per_second'].mean())
         averages["average_down_Mbit_per_second"].append(df_iperf['down_Mbit_per_second'].mean())
         averages['average Uplink Used RB Num'].append(df_iperf['Uplink Used RB Num'].mean())
@@ -414,18 +510,18 @@ for index, file in enumerate(data_files):
             df_total = df_total.append(df_iperf,ignore_index=False)
 
         index_iperf = index_iperf + 1
-    if file_extension == '.csv':
-        df_pcap = read_pcap_analysis_csv(file)
-        df_pcap = merge_dataframes(df_resourceblocks, df_pcap)
-        if index_pcap == 0:
-            df_pcap_total = df_pcap
-        else:
-            df_pcap_total = df_pcap_total.append(df_pcap,ignore_index=False)
+    # if file_extension == '.csv':
+    #     df_pcap = read_pcap_analysis_csv(file)
+    #     df_pcap = merge_dataframes(df_resourceblocks, df_pcap)
+    #     if index_pcap == 0:
+    #         df_pcap_total = df_pcap
+    #     else:
+    #         df_pcap_total = df_pcap_total.append(df_pcap,ignore_index=False)
 
-        index_pcap = index_pcap + 1
-        print(df_pcap_total)
+    #     index_pcap = index_pcap + 1
+    #     print(df_pcap_total)
 
-print (df_pcap_total)
+# print (df_pcap_total)
 
 # create averages dataframe from earlier collected information
 df_averages = pd.DataFrame(averages)
@@ -433,7 +529,7 @@ print(df_averages)
 
 # sort iperf data based on timestamp
 df_total = df_total.sort_values(by=['timestamp'])
-df_pcap_total = df_pcap_total.sort_values(by=['timestamp'])
+# df_pcap_total = df_pcap_total.sort_values(by=['timestamp'])
 
 # sort averages dataframe based on test sequence
 df_averages = df_averages.sort_values(by=['start_timestamp'])
@@ -446,7 +542,7 @@ df_resourceblocks.to_csv('totalresourceblocks.csv')
 
 # store combined dataset in csv file
 df_total.to_csv("totaldata.csv")
-df_pcap_total.to_csv("totaldatapcap.csv")
+# df_pcap_total.to_csv("totaldatapcap.csv")
 df_averages.to_csv("dfaverages.csv")
 # df_total = pd.read_csv("totaldata.csv")
 # df_pcap_total = pd.read_csv("totaldatapcap.csv")
@@ -455,8 +551,8 @@ df_averages.to_csv("dfaverages.csv")
 first_timestamp = df_total.iloc[0]['timestamp']
 df_total['minutes'] = (df_total['timestamp'] - first_timestamp ) / (1000*60)
 
-first_timestamp = df_pcap_total.iloc[0]['timestamp']
-df_pcap_total['minutes'] = (df_pcap_total['timestamp'] - first_timestamp ) / (1000*60)
+# first_timestamp = df_pcap_total.iloc[0]['timestamp']
+# df_pcap_total['minutes'] = (df_pcap_total['timestamp'] - first_timestamp ) / (1000*60)
 # create figures of data
 fig = make_subplots(rows=6, cols=3,
                     shared_xaxes=False,
@@ -480,8 +576,8 @@ if 'end.sum.lost_percent' in df_total:
 if 'sum.lost_percent' in df_total:
     fig.add_trace(go.Scatter(x=df_total['minutes'], y=df_total['sum.lost_percent'], name="percentage lost"),
               row=5, col=1)
-fig.add_trace(go.Scatter(x=df_pcap_total['minutes'], y=df_pcap_total['percentage_lost'], name="percentage lost (pcap)"),
-              row=6, col=1)
+# fig.add_trace(go.Scatter(x=df_pcap_total['minutes'], y=df_pcap_total['percentage_lost'], name="percentage lost (pcap)"),
+#               row=6, col=1)
 fig.add_trace(go.Scatter(x=df_averages.loc[df_averages['direction'] == 'up']['average_up_Mbit_per_second'], 
                          y=df_averages.loc[df_averages['direction'] == 'up']['average Uplink Used RB Num'], 
                          name="average RB's per Mbps up"),
