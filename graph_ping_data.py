@@ -83,8 +83,8 @@ for index, filename in enumerate(sys.argv[1:]):
 
     first_timestamp = df.iloc[0]['timestamp']
     df['minutes'] = (df['timestamp'] - first_timestamp ) / (1000*60)
-
-    ax = df.plot(x ='minutes', y='time', kind = 'line')
+    df.to_csv(histogramdir + '/' +  title + '_ping_latencies.csv')
+    ax = df.plot(x ='minutes', y='time', kind = 'line', grid=True, figsize=[15, 7])
     ax.legend([df.iloc[0]['title']])
     fig1 = ax.get_figure()
     figure_name=histogramdir + '/' +title + '_latency.png'
