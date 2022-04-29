@@ -81,11 +81,11 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 #  <ip address>
 ######################################################################
 echo "${scriptname}: running ping on client side with count: ${count} and interval_sec: ${interval_sec}"
-echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"LC_NUMERIC=en_US.utf8 sudo ping -D -i ${interval_sec} -n -c ${count} -s ${size} -l 5 ${serverIP} > ${data_dir_device}/${session_id}/device_ping_${testdate}.log\""
+echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"LC_NUMERIC=en_US.utf8 sudo ping -O -D -i ${interval_sec} -n -c ${count} -s ${size} ${serverIP} > ${data_dir_device}/${session_id}/device_ping_${testdate}.log\""
 ssh ${userid_device}@${deviceIP} "echo size:${size} > ${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log"
 ssh ${userid_device}@${deviceIP} "echo intervalmsec:${interval_msec} >> ${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log"
 ssh ${userid_device}@${deviceIP} "echo title:${session_id} >> ${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log"
-ssh ${userid_device}@${deviceIP} "LC_NUMERIC=en_US.utf8 sudo ping -D -i ${interval_sec} -n -c ${count} -s ${size} -l 5 ${serverIP} >> ${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log"
+ssh ${userid_device}@${deviceIP} "LC_NUMERIC=en_US.utf8 sudo ping -O -D -i ${interval_sec} -n -c ${count} -s ${size} ${serverIP} >> ${data_dir_device}/${session_id}/device${testID}_ping_${testdate}.log"
 if [ ${?} -eq 1 ]; then
     echo "${scriptname}:  ping with ${testID} closed with error"
 else
