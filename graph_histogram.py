@@ -102,7 +102,7 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 def read_latency(sourceport, destport, basename, direction, filename, protocol):
     with open(filename) as csvfile:
-        readCSV = csv.reader(csvfile, delimiter=',')
+        readCSV = csv.DictReader(csvfile, delimiter=',')
         dates1 = []
         latencies1 = []
         lost1 = []
@@ -116,26 +116,37 @@ def read_latency(sourceport, destport, basename, direction, filename, protocol):
         print("running with protol: " + protocol + " sourceport " + str(sourceport) + " destport: " + str(destport) + " direction: " + direction)
         for index, row in enumerate(readCSV):
             if (index == 1):
-                firsttimestamp = float(row[2])*1000000+float(row[3])
-            if index == 0 or row[0] == 'source_packetNr':
+                firsttimestamp = float(row['source_pcapPacketHeader.ts_sec'])*1000000+float(row['source_pcapPacketHeader.ts_usec'])
+            if index == 0 or row['source_packetNr'] == 'source_packetNr':
                 continue
-            if protocol == None or row[12] != protocol:
+            if protocol == None or row['protocol'] != protocol:
                 continue
-            if direction == None or row[13] != direction:
+            if direction == None or row['direction'] != direction:
                 continue
-            date = (float(row[2])*1000000+float(row[3]) - firsttimestamp)/1000000
-            pcktlength.append(int(row[7]))
-            if row[14] == "true":
+            # normalize values
+            found_destport = 0 if row['udpHeader.dest_port'] == '' else int(row['udpHeader.dest_port'])
+            found_srcport = 0 if row['udpHeader.src_port'] == '' else int(row['udpHeader.src_port'])
+            found_srcseconds = 0 if row['source_pcapPacketHeader.ts_sec'] == '' else int(row['source_pcapPacketHeader.ts_sec'])
+            found_srcuseconds = 0 if row['source_pcapPacketHeader.ts_usec'] == '' else int(row['source_pcapPacketHeader.ts_usec'])
+            found_dstseconds = 0 if row['destination_pcapPacketHeader.ts_sec'] == '' else int(row['destination_pcapPacketHeader.ts_sec'])
+            found_dstuseconds = 0 if row['destination_pcapPacketHeader.ts_usec'] == '' else int(row['destination_pcapPacketHeader.ts_usec'])
+
+            date = (found_srcseconds*1000000+found_srcuseconds - firsttimestamp)/1000000
+            pcktlength.append(int(row['pcapPacketHeader.orig_len']))
+            if row['lost'] == "true":
                 lost1.append(0)
                 dates1.append(date)
                 latencies1.append(None)
             else:
+                if row['delay_usec'] == "":
+                    print("found matched packet with empty delay, skipping")
+                    continue
                 if last_dest_usec == 0:
-                    last_dest_usec = int(row[4])*1000000+int(row[5])
-                    last_src_usec = int(row[2])*1000000+int(row[3])
+                    last_dest_usec = found_dstseconds*1000000+found_dstuseconds
+                    last_src_usec = found_srcseconds*1000000+found_srcuseconds
                 else:
-                    current_dest_usec = int(row[4])*1000000+int(row[5])
-                    current_src_usec = int(row[2])*1000000+int(row[3])
+                    current_dest_usec = found_dstseconds*1000000+found_dstuseconds
+                    current_src_usec = found_srcseconds*1000000+found_srcuseconds
                     source_interpackettime = (current_src_usec - last_src_usec)/1000
                     destination_interpackettime = (current_dest_usec - last_dest_usec)/1000
                     last_src_usec = current_src_usec
@@ -144,10 +155,11 @@ def read_latency(sourceport, destport, basename, direction, filename, protocol):
                     if source_interpackettime >= 0 and destination_interpackettime >=0 and source_interpackettime < 10000 and destination_interpackettime < 10000:
                         destination_interpackettimes1.append(destination_interpackettime)
                         source_interpackettimes1.append(source_interpackettime)
-                latency = float(row[6]) / 1000
+                latency = float(row['delay_usec']) / 1000
                 dates1.append(date)
                 latencies1.append(latency)
                 lost1.append(None)
+        print("size latency array: ", len(latencies1))
         return {
                     'timeline': dates1,
                     'latencies':  latencies1,
@@ -225,24 +237,32 @@ for pars_index, pars in enumerate(variables):
         if len(lat_data['latencies']) < minimum_samples:
             continue
         print("analysing: " +lat_data['basename'] )
+
+        # slice array for graphing. all arrays need to be the same length
         lat_data_for_frame[lat_data['basename']+'_latency'] = lat_data['latencies'][:minlen]
         lost_packets_for_frame[lat_data['basename']+'_latency'] = lat_data['losts'][:minlen]
         timeline_for_frame[lat_data['basename']+'_latency'] = lat_data['timeline'][:minlen]
         source_interp_data_for_frame[lat_data['basename']+'_src_interpcktime'] = lat_data['source_interpackettimes'][:min_interp_len]
         destination_interp_data_for_frame[lat_data['basename']+'_dst_interpcktime'] = lat_data['destination_interpackettimes'][:min_interp_len]
         pcktsize_data_for_frames[lat_data['basename']+'_packetsize'] = lat_data['packetsize'][:minlen]
-        np_latency_arr = np.array(lat_data['latencies'], dtype=np.float64)
+
+        # calculate kpi's from data
+        np_latency_arr = np.array([x for x in lat_data['latencies'] if x is not None], dtype=np.float64)
         lat_data_max_lat = np.round(np.nanmax(np_latency_arr),1,out=None)
+        maxlat=max(x for x in lat_data['latencies'] if x is not None)
+        minlat=min(x for x in lat_data['latencies'] if x is not None)
         max_latency=max(lat_data_max_lat,max_latency)
-        lostpackets=np.count_nonzero(lat_data['losts']==0)
-        packetloss=lostpackets/len(lat_data['losts'])
+        print("min latency: ", minlat)
+        lostpackets=len([x for x in lat_data['losts'] if x is not None])
+        packetloss=lostpackets/len(lat_data['losts'])*100
+        print("lost packets: ", lostpackets)
         print(lat_data['basename']+'_latency', minlen, max_latency)
-        infofile_handler.write(lat_data['basename']+'_min_latency: ' + str(np.round(np.min(np_latency_arr),1,out=None))+'\n')
+        infofile_handler.write(lat_data['basename']+'_min_latency: ' + str(minlat)+'\n')
         infofile_handler.write(lat_data['basename']+'_mean_latency: ' + str(np.round(np.mean(np_latency_arr),1,out=None))+'\n')
         infofile_handler.write(lat_data['basename']+'_std_latency: ' + str(np.round(np.std(np_latency_arr),1,out=None))+'\n')
         infofile_handler.write(lat_data['basename']+'_95th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.95))+'\n')
         infofile_handler.write(lat_data['basename']+'_99th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.99))+'\n')
-        infofile_handler.write(lat_data['basename']+'_max_latency: '+ str(lat_data_max_lat)+'\n')
+        infofile_handler.write(lat_data['basename']+'_max_latency: '+ str(maxlat)+'\n')
         infofile_handler.write(lat_data['basename']+'_mean_source_interpackettime: ' + str(np.round(np.mean(lat_data['source_interpackettimes']),1,out=None))+'\n')
         infofile_handler.write(lat_data['basename']+'_std_source_interpackettime: ' + str(np.round(np.std(lat_data['source_interpackettimes']),1,out=None))+'\n')
         infofile_handler.write(lat_data['basename']+'_mean_dest_interpackettime: ' + str(np.round(np.mean(lat_data['destination_interpackettimes']),1,out=None))+'\n')
