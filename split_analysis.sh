@@ -24,15 +24,15 @@ cat /dev/null > ${filename_b}
 cat /dev/null > ${filename_c}
 cat /dev/null > ${filename_d}
 
-# a: lines to keep: 1, 2, 6, 10
-# b: lines to keep: 1, 2
-# c: lines to keep: 1, 6
-# d: lines to keep: 1, 10
+# a: lines to keep: 1, 2 
+# b: lines to keep: 1, 3, 4, 5 
+# c: lines to keep: 1, 6, 7 
+# d: lines to keep: 1, 8, 9
 
-a=(1 2 6 10)
-b=(1 2)
-c=(1 6)
-d=(1 10)
+a=(1 2)
+b=(1 3 4 5)
+c=(1 6 7)
+d=(1 8 9)
 
 
 

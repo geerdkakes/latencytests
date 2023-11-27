@@ -197,7 +197,7 @@ def get_xlim(df):
 def save_image(figure, filepath):
     print("saving pio graphs...")
     # disable mathjax to prevent large timeouts trying to do internet call
-    pio.kaleido.scope.mathjax = None
+    # pio.kaleido.scope.mathjax = None
     try:
         print("...html...")
         pio.write_html(figure, filepath + '.html')
