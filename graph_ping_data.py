@@ -25,7 +25,7 @@ currentdate = datetime.today().strftime('%Y-%m-%d-%H.%M.%S')
 def load_ping_log(filename):
     print("loading file: " + filename)
     fields = ['text']
-    df = pd.read_csv(filename, names=fields, skiprows=4)
+    df = pd.read_csv(filename, names=fields, skiprows=4, skipfooter=4)
 
     df = df[df["text"].str.contains(r'\[([0-9.]*)\]\s([0-9]*)\sbytes\sfrom\s[0-9.]*:\sicmp_seq=([0-9]*)\sttl=[0-9]*\stime=([0-9.]*)\sms')]
 
@@ -67,6 +67,11 @@ def set_legend():
     plt.legend(fontsize=8,bbox_to_anchor=(1.04,0), loc="lower left", borderaxespad=0)
     plt.tight_layout(rect=[0,0,0.9,1])
 
+def calc_perc_lat(latencies_arr, perc):
+    latencies_sorted = np.sort(latencies_arr)
+    latencies_99_pos = int(len(latencies_arr) *perc)
+    return latencies_sorted[latencies_99_pos]
+
 filename=sys.argv[1]
 for index, filename in enumerate(sys.argv[1:]):
     df = load_ping_log(filename)
@@ -94,7 +99,7 @@ for index, filename in enumerate(sys.argv[1:]):
     if index == 0:
         df_total = df
         df_total[title] = df_total['time']
-        df_total = df_total.drop(columns=["timestamp", "bytes", "sequence_nr", "time", "title", "size", "intervalmsec", "minutes"])
+        # df_total = df_total.drop(columns=["timestamp", "bytes", "sequence_nr", "time", "title", "size", "intervalmsec", "minutes"])
     else:
         rows_current=df.shape[0]
         rows_total=df_total.shape[0]
@@ -102,7 +107,7 @@ for index, filename in enumerate(sys.argv[1:]):
             print("dropping " + title + " only " + str(rows_current) + " samples found")
             continue
         if rows_current > rows_total:
-            print("dopping rows from current frame ", rows_total-rows_current)
+            print("dropping rows from current frame ", rows_total-rows_current)
             df = df.head(rows_total-rows_current)
         elif rows_total > rows_current:
             print("dropping rows from total frame: ", rows_current-rows_total)
@@ -112,11 +117,12 @@ for index, filename in enumerate(sys.argv[1:]):
 
 print(df_total)
 print("create histogram figures for " + basename + "...")
+df_to_plot= df_total.drop(columns=["timestamp", "bytes", "sequence_nr", "time", "title", "size", "intervalmsec", "minutes"])
 # pie1 = df_total.plot.hist(histtype='step',cumulative=True, density=True, rwidth='float',grid=True, bins=500, figsize=[15, 7], xlim=get_xlim(df_total))
-pie1 = df_total.plot.hist(histtype='step',cumulative=True, density=True, rwidth='float',grid=True, figsize=[15, 7])
+pie1 = df_to_plot.plot.hist(histtype='step',cumulative=True, density=True, rwidth='float',grid=True, figsize=[15, 7])
 set_legend()
 # pie2 = df_total.plot.hist(histtype='step', cumulative=False,rwidth='float',grid=True, bins=500, figsize=[15, 7], xlim=get_xlim(df_total))
-pie2 = df_total.plot.hist(histtype='step', cumulative=False,rwidth='float',grid=True, figsize=[15, 7])
+pie2 = df_to_plot.plot.hist(histtype='step', cumulative=False,rwidth='float',grid=True, figsize=[15, 7])
 set_legend()
 fig1 = pie1.get_figure()
 fig2 = pie2.get_figure()
@@ -125,6 +131,21 @@ fig2.savefig(histogramdir + '/' + basename + '_ping_latency_histogram.png')
 
 df_total.to_csv(histogramdir + '/' +  basename + '_ping_latencies.csv')
 
+
+infofile = histogramdir + '/infofile.txt'
+np_latency_arr = np.array([x for x in df_total['time'] if x is not None], dtype=np.float64)
+print("storing al statistics in '%s'" %infofile)
+maxlat=max(x for x in df_total['time'] if x is not None)
+minlat=min(x for x in df_total['time'] if x is not None)
+infofile_handler = open(infofile,"w")
+infofile_handler.write('packet_size' + str(np.array([x for x in df_total['bytes'] if x is not None], dtype=np.int32)[0])+'\n')
+infofile_handler.write('interval_msec' + str(np.array([x for x in df_total['intervalmsec'] if x is not None], dtype=np.int32)[0])+'\n')
+infofile_handler.write('min_latency: ' + str(minlat)+'\n')
+infofile_handler.write('mean_latency: ' + str(np.round(np.mean(np_latency_arr),1,out=None))+'\n')
+infofile_handler.write('std_latency: ' + str(np.round(np.std(np_latency_arr),1,out=None))+'\n')
+infofile_handler.write('95th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.95))+'\n')
+infofile_handler.write('99th_percentile_latency: ' + str(calc_perc_lat(np_latency_arr, 0.99))+'\n')
+infofile_handler.write('max_latency: '+ str(maxlat)+'\n')
 print("files stored at: " + histogramdir)
 
 
