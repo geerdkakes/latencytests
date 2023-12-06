@@ -147,7 +147,12 @@ function run_test_tasks(){
     # start nuttcp tests
     if [ "${nuttcp_dev1_test^^}" =  "TRUE" ] ; then
         echo "${scriptname}: starting nuttcp tests"
-        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev1_mtu_size} -bitrate ${nuttcp_dev1_bitrate} -s_ip ${nuttcp_dev1_server_ip} -d_ip ${nuttcp_dev1_device_ip} -t ${test_duration} -d ${nuttcp_dev1_direction} -d_user ${nuttcp_dev1_test_user} -protocol ${nuttcp_dev1_protocol} -streams ${nuttcp_dev1_streams} -dataport ${nuttcp_dev1_data_port} -controlport ${nuttcp_dev1_control_port} &
+        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev1_mtu_size} -test_id dev1 -bitrate ${nuttcp_dev1_bitrate} -s_ip ${nuttcp_dev1_server_ip} -d_ip ${nuttcp_dev1_device_ip} -t ${test_duration} -d ${nuttcp_dev1_direction} -d_user ${nuttcp_dev1_test_user} -protocol ${nuttcp_dev1_protocol} -streams ${nuttcp_dev1_streams} -dataport ${nuttcp_dev1_data_port} -controlport ${nuttcp_dev1_control_port} &
+    fi
+    # start nuttcp tests
+    if [ "${nuttcp_dev2_test^^}" =  "TRUE" ] ; then
+        echo "${scriptname}: starting nuttcp tests"
+        ./run_nuttcp.sh -s ${session_id} -M ${nuttcp_dev2_mtu_size} -test_id dev2 -bitrate ${nuttcp_dev2_bitrate} -s_ip ${nuttcp_dev2_server_ip} -d_ip ${nuttcp_dev2_device_ip} -t ${test_duration} -d ${nuttcp_dev2_direction} -d_user ${nuttcp_dev2_test_user} -protocol ${nuttcp_dev2_protocol} -streams ${nuttcp_dev2_streams} -dataport ${nuttcp_dev2_data_port} -controlport ${nuttcp_dev2_control_port} &
     fi
     # start ping tests
     if [ "${ping_dev1_test^^}" =  "TRUE" ] ; then

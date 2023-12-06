@@ -24,6 +24,7 @@ streams="1"
 udp=""
 scriptname=$0
 nuttcp_port=5210
+test_id=dev1
 #############################################
 # interpret command line flags
 #############################################
@@ -59,6 +60,9 @@ do
             shift ;;
         -protocol) protocol="$2"
             echo "${scriptname}: protocol used: ${protocol}"
+            shift ;;
+        -test_id) test_id="$2"
+            echo "${scriptname}: test_id used at device: ${test_id}"
             shift ;;
         -controlport) nuttcp_controlport="$2"
             echo "${scriptname}: nuttcp_controlport used: ${nuttcp_controlport}"
@@ -126,12 +130,12 @@ echo "${nuttcp_app} -1 -P${nuttcp_controlport}"
 ${nuttcp_app} -1 -P${nuttcp_controlport}
 sleep 1
 
-echo "${scriptname}: running client side nuttcp test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${nuttcp_port}"
-echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} > ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log\""
+echo "${scriptname}: running client side nuttcp test with MTU: ${MTU} MSS window: ${MSS} Datalenth: ${DATALENGTH} serverIP ${serverIP} and port ${nuttcp_port} on device ${test_id}"
+echo "${scriptname}: ssh ${userid_device}@${deviceIP} \"${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} > ${data_dir_device}/${session_id}/device_${test_id}_nuttcp_${testdate}.log\""
 ssh ${userid_device}@${deviceIP} "date +'startetime:%s' > ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
 ssh ${userid_device}@${deviceIP} "echo direction:${direction} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
 ssh ${userid_device}@${deviceIP} "echo title:${session_id} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
-ssh ${userid_device}@${deviceIP} "${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} >> ${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log"
+ssh ${userid_device}@${deviceIP} "${nuttcp_app} -o -P${nuttcp_controlport} -p${nuttcp_dataport} -T${time} ${dir_var} -N${streams} ${bitrateoption} ${udp_tcp_specific} ${serverIP} >> ${data_dir_device}/${session_id}/device_${test_id}_nuttcp_${testdate}.log"
 if [ ${?} -eq 1 ]; then
     echo "${scriptname}:  Error while connecting from client site to nuttcp server"
 else
@@ -143,5 +147,5 @@ sleep 3
 ##########################################
 # retrieve device logfile 
 ##########################################
-scp ${userid_device}@${deviceIP}:${data_dir_device}/${session_id}/device_nuttcp_${testdate}.log  ${data_dir_server}/${session_id}/
-echo "${scriptname}: stored nuttcp output at ${data_dir_server}/${session_id}/device_nuttcp_${testdate}.log"
+scp ${userid_device}@${deviceIP}:${data_dir_device}/${session_id}/device_${test_id}_nuttcp_${testdate}.log  ${data_dir_server}/${session_id}/
+echo "${scriptname}: stored nuttcp output at ${data_dir_server}/${session_id}/device_${test_id}_nuttcp_${testdate}.log"
