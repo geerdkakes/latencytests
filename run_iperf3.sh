@@ -108,7 +108,7 @@ fi
 # create data directories with session id
 ###########################################
 mkdir -p ${data_dir_server}/${session_id}
-ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session_id}"
+ssh ${userid_device}@${deviceIP} "mkdir -p ${data_dir_device}/${session_id}"
 
 ######################################################################
 # iperf3 test with the following parameters:
