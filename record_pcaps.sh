@@ -31,6 +31,9 @@ do
         -s_if) serverIF="$2"
             echo "${scriptname}: Server IF to monitor: ${serverIF}"
             shift ;;
+        -d_if) deviceIF="$2"
+            echo "${scriptname}: Device IF to monitor: ${deviceIF}"
+            shift ;;
         -d_ip) deviceIP="$2"
             echo "${scriptname}: Device IP to contact: ${deviceIP}"
             shift ;;
@@ -107,20 +110,27 @@ ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session
 
 
 ###########################################
-# finding interface on device
+# finding interface on device if deviceIF is not set
 ###########################################
-for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
-    echo "${scriptname}: trying to find device interface using IP prefix: ${prefixmodemIP} for device ${test_id}"
-    deviceinterface=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "${prefixmodemIP}" -B 1 | head -1 | sed 's/\(.*\)\:\s\(.*\)/\1/')
-    if [ ! "${deviceinterface}" = "" ]; then
-        break
+if [ -z ${deviceIF+x} ]; then
+  # trying to find device interface using IP address
+    for prefixmodemIP in "${prefixmodemIP_arr[@]}"; do
+        echo "${scriptname}: trying to find device interface using IP prefix: ${prefixmodemIP} for device ${test_id}"
+        deviceinterface=$(ssh ${userid_device}@${deviceIP} /usr/sbin/ifconfig | grep "${prefixmodemIP}" -B 1 | head -1 | sed 's/\(.*\)\:\s\(.*\)/\1/')
+        if [ ! "${deviceinterface}" = "" ]; then
+            break
+        fi
+    done
+    if [ "${deviceinterface}" = "" ]; then
+        echo "${scriptname}: no ethernet device found to monitor. exiting"
+        exit 1
+        else
+        echo "${scriptname}: found device interface ${deviceinterface} for device ${test_id}"
     fi
-done
-if [ "${deviceinterface}" = "" ]; then
-  echo "${scriptname}: no ethernet device found to monitor. exiting"
-  exit 1
 else
-  echo "${scriptname}: found device interface ${deviceinterface} for device ${test_id}"
+    # deviceIF is set, using it
+    deviceinterface=${deviceIF}
+    echo "${scriptname}: using device interface ${deviceinterface} for device ${test_id}"
 fi
 ###########################################
 # starting pcap logging on server and device
