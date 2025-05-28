@@ -152,11 +152,11 @@ function run_test_tasks(){
         fi
         # check if basename for device is set
         if [ -z "${pcap_device2_basename+x}" ] ; then
-            echo "${scriptname}: pcap_device1_basename is not set, using default."
+            echo "${scriptname}: pcap_device2_basename is not set, using default."
             device2_recordingbasename=""
         else
-            echo "${scriptname}: pcap_device1_basename is set, using it: ${pcap_device1_basename}"
-            device2_recordingbasename="-d_basename ${pcap_device1_basename}"
+            echo "${scriptname}: pcap_device2_basename is set, using it: ${pcap_device2_basename}"
+            device2_recordingbasename="-d_basename ${pcap_device2_basename}"
         fi
         # check if pcap_device2_testid is set, if not we will use dev1 as default
         if [ -z "${pcap_device2_testid+x}" ] ; then
