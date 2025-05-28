@@ -42,6 +42,9 @@ do
         -a) action="$2"
             echo "${scriptname}: action: ${action}"
             shift ;;
+        -s) sequencenr="$2"
+            echo "${scriptname}: sequence number: ${sequencenr}"
+            shift ;;            
         --) shift
             break ;;
         *) echo "${scriptname}: $1 is not an option";;
@@ -72,7 +75,21 @@ function run_test_tasks(){
     echo "${scriptname}: checking if called with correct variables"
 
     check_variable test_duration
-    check_variable session_id
+
+    # if session_id is not set, we will use date and index to create a unique session_id
+    # format is YYYYMMDD_index
+    if [ -z "${session_id+x}" ] ; then
+        # check if sequencenr is set, if not we will only use date and index to create a unique session_id
+        if [ -z "${sequencenr+x}" ] ; then
+            echo "${scriptname}: sequencenr is not set, using date and index to create a unique session_id"
+            session_id=$(date +%Y%m%d)_${index}
+        else
+            echo "${scriptname}: sequencenr is set, using it: ${sequencenr} to create a unique session_id"
+            session_id=$(date +%Y%m%d)_${sequencenr}_${index}
+        fi
+    fi
+    
+
 
     echo
     echo "${scriptname}: running test session ${session_id} for ${test_duration} seconds"
