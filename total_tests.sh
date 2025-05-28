@@ -103,10 +103,17 @@ function run_test_tasks(){
             echo "${scriptname}: pcap_device1_basename is set, using it: ${pcap_device1_basename}"
             device1_recordingbasename="-d_basename ${pcap_device1_basename}"
         fi
-
+        # check if pcap_device1_testid is set, if not we will use dev1 as default
+        if [ -z "${pcap_device1_testid+x}" ] ; then
+            echo "${scriptname}: pcap_device1_testid is not set, using default: dev1"
+            device1_recordingtestid="-test_id dev1"
+        else
+            echo "${scriptname}: pcap_device1_testid is set, using it: ${pcap_device1_testid}"
+            device1_recordingtestid="-test_id ${pcap_device1_testid}"
+        fi
         # start pcap logging for device 1
         echo "${scriptname}: starting pcap logging device 1 with options: ${device1_recordingdeviceoption}"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device1_recordingbasename} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} ${device1_recordingdeviceoption} ${device1_recordingserveroption} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device1_recordingbasename} ${device1_recordingtestid} -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} ${device1_recordingdeviceoption} ${device1_recordingserveroption} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
 
     fi
     if [ "${pcap_device2^^}" =  "TRUE" ] ; then
@@ -134,9 +141,17 @@ function run_test_tasks(){
             echo "${scriptname}: pcap_device1_basename is set, using it: ${pcap_device1_basename}"
             device2_recordingbasename="-d_basename ${pcap_device1_basename}"
         fi
+        # check if pcap_device2_testid is set, if not we will use dev1 as default
+        if [ -z "${pcap_device2_testid+x}" ] ; then
+            echo "${scriptname}: pcap_device2_testid is not set, using default: dev2"
+            device2_recordingtestid="-test_id dev2"
+        else
+            echo "${scriptname}: pcap_device1_testid is set, using it: ${pcap_device1_testid}"
+            device2_recordingtestid="-test_id ${pcap_device1_testid}"
+        fi
         # start pcap logging for device 2
         echo "${scriptname}: starting pcap logging device 2 with options: ${device2_recordingdeviceoption}"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device2_recordingbasename} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} ${device2_recordingdeviceoption} ${device2_recordingserveroption} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device2_recordingbasename} ${device2_recordingtestid} -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} ${device2_recordingdeviceoption} ${device2_recordingserveroption} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
     fi
 
     # start udp tests
