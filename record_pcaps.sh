@@ -31,6 +31,9 @@ do
         -s_if) serverIF="$2"
             echo "${scriptname}: Server IF to monitor: ${serverIF}"
             shift ;;
+        -d_basename) basename_device="$2"
+            echo "${scriptname}: basename for device: ${basename_device}"
+            shift ;;
         -d_if) deviceIF="$2"
             echo "${scriptname}: Device IF to monitor: ${deviceIF}"
             shift ;;
@@ -150,7 +153,17 @@ else
     echo "${scriptname}: using server interface ${serverIF} for recording"
     serverRecording=true
 fi
-
+############################################
+# check whether we have a basename for the device
+# if not, we use the default basename
+#############################################
+if [ -z ${basename_device+x} ]; then
+    # basename_device not set, using default basename
+    echo "${scriptname}: no basename for device set, using default basename: device"
+    basename_device="device"
+else
+    echo "${scriptname}: using basename for device: ${basename_device}"
+fi
 
 ###########################################
 # create data directories with session id
@@ -237,8 +250,8 @@ if [ "${extra_probe_enabled^^}" = "TRUE" ]; then
     echo sudo tcpdump -n -i ${extra_probe_dev} udp  port 2152 -s ${extra_probe_snaplen} -B 4096 -G ${duration} -W 1 -w ${data_dir_server}/${session_id}/${extra_probe_name}_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
 fi
 echo "${scriptname}: logging device pcap on interface ${deviceinterface}"
-echo ssh ${userid_device}@${deviceIP} sudo tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/device_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
-ssh ${userid_device}@${deviceIP} sudo tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/device_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
+echo ssh ${userid_device}@${deviceIP} sudo tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/${basename_device}_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
+ssh ${userid_device}@${deviceIP} sudo tcpdump -n -i ${deviceinterface} ${protocols}  ${ports} -s ${snaplen} -G ${duration} -W 1 -w ${data_dir_device}/${session_id}/pcaps/${basename_device}_${test_id}_%Y-%m-%d_%H.%M.%S.pcap
 # record on device 2 if configured
 if [ "${deviceRecording2}" = true ]; then
     echo "${scriptname}: logging device 2 pcap on interface ${deviceinterface2}"

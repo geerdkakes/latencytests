@@ -95,9 +95,18 @@ function run_test_tasks(){
             echo "${scriptname}: pcap_serverrecording_dev1 is not set, omitting server_interface and pcap_server1_ip"
             device1_recordingserveroption=""
         fi
+        # check if basename for device is set
+        if [ -z "${pcap_device1_basename+x}" ] ; then
+            echo "${scriptname}: pcap_device1_basename is not set, using default.
+            device1_recordingbasename=""
+        else
+            echo "${scriptname}: pcap_device1_basename is set, using it: ${pcap_device1_basename}"
+            device1_recordingbasename="-d_basename ${pcap_device1_basename}"
+        fi
+
         # start pcap logging for device 1
         echo "${scriptname}: starting pcap logging device 1 with options: ${device1_recordingdeviceoption}"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} ${device1_recordingdeviceoption} ${device1_recordingserveroption} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device1_recordingbasename} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} ${device1_recordingdeviceoption} ${device1_recordingserveroption} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
 
     fi
     if [ "${pcap_device2^^}" =  "TRUE" ] ; then
@@ -117,9 +126,17 @@ function run_test_tasks(){
             echo "${scriptname}: pcap_serverrecording_dev2 is not set, omitting server_interface and pcap_server2_ip"
             device2_recordingserveroption=""
         fi
+        # check if basename for device is set
+        if [ -z "${pcap_device2_basename+x}" ] ; then
+            echo "${scriptname}: pcap_device1_basename is not set, using default.
+            device2_recordingbasename=""
+        else
+            echo "${scriptname}: pcap_device1_basename is set, using it: ${pcap_device1_basename}"
+            device2_recordingbasename="-d_basename ${pcap_device1_basename}"
+        fi
         # start pcap logging for device 2
         echo "${scriptname}: starting pcap logging device 2 with options: ${device2_recordingdeviceoption}"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} ${device2_recordingdeviceoption} ${device2_recordingserveroption} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} ${device2_recordingbasename} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} ${device2_recordingdeviceoption} ${device2_recordingserveroption} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
     fi
 
     # start udp tests
