@@ -70,52 +70,56 @@ function run_test_tasks(){
     # check precense of variables for testing
     ############################
     echo "${scriptname}: checking if called with correct variables"
-    check_variable udp_test_1
-    check_variable udp_data_size_1
-    check_variable udp_interpacket_time_1
-    check_variable udp_test_user_1
-    check_variable udp_test_device_ip_1
-    check_variable udp_server_port_1
-    check_variable udp_device_port_1
-    check_variable mqtt_test
-    check_variable mqtt_data_size
-    check_variable mqtt_interpacket_time
-    check_variable mqtt_test_user
-    check_variable mqtt_test_device_ip
-    check_variable iperf3_dev1_test
-    check_variable iperf3_dev1_test_user
-    check_variable iperf3_dev1_test_device_ip
-    check_variable iperf3_dev1_direction
+
     check_variable test_duration
     check_variable session_id
-    check_variable iperf3_dev1_mtu_size
-    check_variable iperf3_dev1_server_ip
-    check_variable iperf3_dev1_streams
-    check_variable iperf3_dev1_protocol
-    check_variable iperf3_dev1_bitrate
-    check_variable pcap_server1_ip
-    check_variable server_interface
-    check_variable modem_prefix_ip_device1
-    check_variable pcap_device1_user
-    check_variable pcap_device1
-    check_variable pcap_device1_ip
-    check_variable pcap_server1_ip
-    check_variable pcap_device1_ports
-    check_variable pcap_device1_snaplen
-    check_variable pcap_device1_protocols
-    check_variable iperf3_dev1_port
 
     echo
     echo "${scriptname}: running test session ${session_id} for ${test_duration} seconds"
 
     # start recording pcaps
     if [ "${pcap_device1^^}" =  "TRUE" ] ; then
-        echo "${scriptname}: starting pcap logging device 1"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} -d_ip_modem_prefix ${modem_prefix_ip_device1} -s_if ${server_interface} -s_ip ${pcap_server1_ip} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
+        # check if modem_prefix_ip_device1 is set, if not we will use pcap_device1_interface with the commandline option -d_if
+        if [ -z "${modem_prefix_ip_device1+x}" ] ; then
+            echo "${scriptname}: modem_prefix_ip_device1 is not set, using pcap_device1_interface: ${pcap_device1_interface}"
+            device1_recordingdeviceoption=" -d_if ${pcap_device1_interface}"
+        else
+            echo "${scriptname}: modem_prefix_ip_device1 is set, using it: ${modem_prefix_ip_device1}"
+            device1_recordingdeviceoption=" -d_ip_modem_prefix ${modem_prefix_ip_device1}"
+        fi
+        # check if pcap_serverrecording_dev1 is true, if not we will not record pcaps on the server and ommit the -s_if and -s_ip options
+        if [ "${pcap_serverrecording_dev1^^}" =  "TRUE" ] ; then
+            echo "${scriptname}: pcap_serverrecording_dev1 is set, using server_interface ${server_interface} and pcap_server1_ip ${pcap_server1_ip}"
+            device1_recordingserveroption=" -s_if ${server_interface} -s_ip ${pcap_server1_ip}"
+        else
+            echo "${scriptname}: pcap_serverrecording_dev1 is not set, omitting server_interface and pcap_server1_ip"
+            device1_recordingserveroption=""
+        fi
+        # start pcap logging for device 1
+        echo "${scriptname}: starting pcap logging device 1 with options: ${device1_recordingdeviceoption}"
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev1 -d_user ${pcap_device1_user} -d_ip ${pcap_device1_ip} ${device1_recordingdeviceoption} ${device1_recordingserveroption} -snaplen ${pcap_device1_snaplen} -ports ${pcap_device1_ports} -protocols ${pcap_device1_protocols} -extra_probe_enabled ${pcap_device1_extra_probe_enabled} -extra_probe_name ${pcap_device1_extra_probe_name} -extra_probe_dev ${pcap_device1_extra_probe_dev}  -extra_probe_snaplen ${pcap_device1_extra_probe_snaplen} &
+
     fi
     if [ "${pcap_device2^^}" =  "TRUE" ] ; then
-        echo "${scriptname}: starting pcap logging device 2"
-        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} -d_ip_modem_prefix ${modem_prefix_ip_device2} -s_if ${server_interface} -s_ip ${pcap_server2_ip} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
+        # check if modem_prefix_ip_device2 is set, if not we will use pcap_device2_interface with the commandline option -d_if
+        if [ -z "${modem_prefix_ip_device2+x}" ] ; then
+            echo "${scriptname}: modem_prefix_ip_device2 is not set, using pcap_device2_interface: ${pcap_device2_interface}"
+            device2_recordingdeviceoption=" -d_if ${pcap_device2_interface}"
+        else
+            echo "${scriptname}: modem_prefix_ip_device2 is set, using it: ${modem_prefix_ip_device2}"
+            device2_recordingdeviceoption=" -d_ip_modem_prefix ${modem_prefix_ip_device2}"
+        fi
+        # check if pcap_serverrecording_dev2 is true, if not we will not record pcaps on the server and ommit the -s_if and -s_ip options
+        if [ "${pcap_serverrecording_dev2^^}" =  "TRUE" ] ; then
+            echo "${scriptname}: pcap_serverrecording_dev2 is set, using server_interface ${server_interface} and pcap_server2_ip ${pcap_server2_ip}"
+            device2_recordingserveroption=" -s_if ${server_interface} -s_ip ${pcap_server2_ip}"
+        else
+            echo "${scriptname}: pcap_serverrecording_dev2 is not set, omitting server_interface and pcap_server2_ip"
+            device2_recordingserveroption=""
+        fi
+        # start pcap logging for device 2
+        echo "${scriptname}: starting pcap logging device 2 with options: ${device2_recordingdeviceoption}"
+        ./record_pcaps.sh -s ${session_id} -t ${test_duration} -test_id dev2 -d_user ${pcap_device2_user} -d_ip ${pcap_device2_ip} ${device2_recordingdeviceoption} ${device2_recordingserveroption} -snaplen ${pcap_device2_snaplen} -ports ${pcap_device2_ports} -protocols ${pcap_device2_protocols}  -extra_probe_enabled ${pcap_device2_extra_probe_enabled} -extra_probe_name ${pcap_device2_extra_probe_name} -extra_probe_dev ${pcap_device2_extra_probe_dev}  -extra_probe_snaplen ${pcap_device2_extra_probe_snaplen} &
     fi
 
     # start udp tests
