@@ -156,10 +156,10 @@ fi
 # create data directories with session id
 ###########################################
 mkdir -p ${data_dir_server}/${session_id}
-ssh ${userid_device}@${deviceIP} "/usr/bin/mkdir -p ${data_dir_device}/${session_id}/pcaps"
+ssh ${userid_device}@${deviceIP} "mkdir -p ${data_dir_device}/${session_id}/pcaps"
 # create data directories on device 2 if configured
 if [ "${deviceRecording2}" = true ]; then
-    ssh ${userid_device2}@${deviceIP2} "/usr/bin/mkdir -p ${data_dir_device}/${session_id}/pcaps"
+    ssh ${userid_device2}@${deviceIP2} "mkdir -p ${data_dir_device}/${session_id}/pcaps"
 fi
 
 
